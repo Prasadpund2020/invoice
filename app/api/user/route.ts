@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { NextRequest } from 'next/server';
 import { auth } from '@/lib/auth';
 import UserModel from '@/models/user.model';
+import {connectDB} from '@/lib/connectDB';
 
 export async function PUT(request: NextRequest) {
     try {
@@ -10,6 +11,7 @@ export async function PUT(request: NextRequest) {
         if (!session) {
             return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
         }
+        await connectDB();
 
         const userDetails = await UserModel.findByIdAndUpdate(session.user?.id, {
             firstName,
