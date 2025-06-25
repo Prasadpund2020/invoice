@@ -20,6 +20,11 @@ export async function PUT(request: NextRequest) {
         });
 
         return NextResponse.json({ message: 'User updated successfully'});
+        
+
+
+
+
     } catch (error: any) {
         return NextResponse.json({
             message: error?.message || 'An error occurred',

@@ -10,10 +10,48 @@ import { Button } from '@/components/ui/button';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { onboardingSchema } from '@/lib/zodSchema';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+
+
+
 
 
 export default function OnboardingPage() {
-    const {}= useForm<z.infer<typeof onboardingSchema>>()
+    const { register, handleSubmit, formState: { errors } } = useForm<z.infer<typeof onboardingSchema>>({
+        resolver: zodResolver(onboardingSchema),
+        defaultValues: {
+            currency: 'USD',
+        }
+    })
+    const [isLoading, setIsLoading] = useState<boolean>(false);
+    const router = useRouter();
+    const onSubmit = async (data: z.infer<typeof onboardingSchema>) => {
+        console.log(data);
+        try {
+            setIsLoading(true);
+            const response = await fetch('/api/user', {
+                method: 'PUT',
+                body: JSON.stringify(data),
+            })
+            const responseData = await response.json();
+
+            if (response.status === 200) {
+                router.push('/dashboard');
+            }
+
+
+        }
+        catch (error) {
+            console.log(error);
+        }
+        finally {
+            setIsLoading(false);
+        }
+
+    }
+
     return (
         <div className="flex items-center justify-center flex-col min-h-dvh h-dvh overflow-auto relative p-4">
             <div className="absolute top-0 z-[-2] h-screen w-screen bg-white bg-[radial-gradient(100%_50%_at_50%_0%,rgba(0,163,255,0.13)_0,rgba(0,163,255,0)_50%,rgba(0,163,255,0)_100%)]"></div>
@@ -27,24 +65,37 @@ export default function OnboardingPage() {
                 </CardHeader>
 
                 <CardContent>
-                    <form className="grid gap-4">
+                    <form className="grid gap-4" onSubmit={handleSubmit(onSubmit)}>
                         <div className="grid gap-4">
                             <label>First name</label>
                             <input
                                 placeholder="joe"
-                                type="text">
-                            </input>
+                                type="text"
+                                {...register("firstName", { required: true })}
+                                disabled={isLoading} />
+                            {
+                                errors.firstName && (
+                                    <p className="text-xs text-red-500">{errors.firstName.message}</p>
+                                )
+                            }
                         </div>
                         <div className="grid gap-4">
                             <label>Last  name</label>
                             <input
                                 placeholder="biden"
-                                type="text">
-                            </input>
+                                type="text" {...register("lastName", { required: true })}
+                                disabled={isLoading}/>
+                            
+                            {
+                                errors.lastName && (
+                                    <p className="text-sx text-red-500">{errors.lastName.message}</p>
+                                )
+                            }
                         </div>
                         <div className="grid gap-2 " >
-                            <label>Select currency </label>
-                            <Select >
+                            <label >Select currency </label>
+                            <Select defaultValue="USD" {...register("currency")}
+                                disabled={isLoading}>
                                 <SelectTrigger className="w-full">
                                     <SelectValue placeholder="Select currency" />
                                 </SelectTrigger>
@@ -62,7 +113,11 @@ export default function OnboardingPage() {
                                 </SelectContent>
                             </Select>
                         </div>
-                        <Button>Finished Onboarding</Button>
+                        <Button disabled={isLoading}>
+                            {
+                                isLoading ? "please wait..." : "Finished Onboarding"
+                            }
+                        </Button>
                     </form>
 
 
