@@ -6,7 +6,17 @@ import { SidebarTrigger } from "@/components/ui/sidebar";
 export default  async function DashboardHeader(){
     const session =await auth();
     return (
-       <header className ="sticky top-0 h-14 w-full border-b  backdrop-3xl flex items-center">
+      <header  className="
+    sticky top-0 z-50
+    h-14 w-full
+    bg-blue-200/30
+    backdrop-blur-md
+    border-b border-blue-300/30
+    shadow
+    flex items-center
+    px-4
+  ">
+
 
         <SidebarTrigger/>
         <div>

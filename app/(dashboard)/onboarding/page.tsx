@@ -35,7 +35,6 @@ export default function OnboardingPage() {
                 method: 'PUT',
                 body: JSON.stringify(data),
             })
-            const responseData = await response.json();
 
             if (response.status === 200) {
                 router.push('/dashboard');
@@ -101,7 +100,7 @@ export default function OnboardingPage() {
                                 </SelectTrigger>
                                 <SelectContent>
                                     {
-                                        Object.keys(currencyOption).map((item: string, index: number) => {
+                                        Object.keys(currencyOption).map((item: string) => {
                                             return (
                                                 <SelectItem className=" side-bottom" key={item} value={item}>{item}</SelectItem>
                                             )

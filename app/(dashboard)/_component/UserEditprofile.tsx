@@ -1,5 +1,4 @@
 "use client"
-import { Label} from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { z } from 'zod';
 import { onboardingSchema } from '@/lib/zodSchema';
@@ -7,7 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
-import {Card, CardHeader,CardTitle,CardDescription,CardContent,} from '@/components/ui/card';
+import {Card,CardContent,} from '@/components/ui/card';
 import {Select,SelectContent,SelectItem,SelectTrigger,SelectValue,} from "@/components/ui/select"
 import {currencyOption} from "@/lib/utils"
 
@@ -45,7 +44,6 @@ export default  function UserEditProfile({firstName,lastName,email,currency}: Us
                     method: 'PUT',
                     body: JSON.stringify(data),
                 })
-                const responseData = await response.json();
     
                 if (response.status === 200) {
                     router.refresh()
@@ -103,7 +101,7 @@ export default  function UserEditProfile({firstName,lastName,email,currency}: Us
                                 </SelectTrigger>
                                 <SelectContent>
                                     {
-                                        Object.keys(currencyOption).map((item: string, index: number) => {
+                                        Object.keys(currencyOption).map((item: string) => {
                                             return (
                                                 <SelectItem className=" side-bottom" key={item} value={item}>{item}</SelectItem>
                                             )

@@ -20,7 +20,7 @@ type TSignatureData = {
     image: string
 }
 
-export default function settingPage() {
+export default function SettingPage() {
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [logo, setLogo] = useState<string>()
     const [signatureData, setsignatureData] = useState<TSignatureData>({

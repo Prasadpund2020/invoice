@@ -3,10 +3,8 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label";
 import {signIn } from "@/lib/auth";
 import SubmitButton from "@/components/SubmitButton";
-import { auth } from "@/lib/auth";
 
 export default  async function  LoginPage(){
-    const session = await auth()
 
 
     return(
