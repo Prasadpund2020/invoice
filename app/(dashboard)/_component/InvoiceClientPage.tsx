@@ -127,7 +127,7 @@ export default function InvoiceClientPage({ currency,userId }: IInvoiceClientPag
                             <DropdownMenuItem onClick ={()=>router.push(`/api/invoice/${userId}/${invoiceId}`)}>
                                 View
                             </DropdownMenuItem>
-                            <DropdownMenuItem>
+                            <DropdownMenuItem onClick ={()=>router.push(`/invoice/edit/${invoiceId}`)}>
                                 Edit
                             </DropdownMenuItem>
                             <DropdownMenuItem>

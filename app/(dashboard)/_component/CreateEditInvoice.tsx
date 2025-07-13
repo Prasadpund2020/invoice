@@ -21,10 +21,10 @@ import { useRouter } from "next/navigation";
 import { Textarea } from "@/components/ui/textarea";
 
 interface ICreateEditInvoice {
-  firstName: string | undefined;
-  lastName: string | undefined;
-  email: string | undefined | null;
-  currency: string | undefined;
+  firstName?: string | undefined;
+  lastName?: string | undefined;
+  email?: string | undefined | null;
+  currency?: string | undefined;
   invoiceId?: string | undefined; //for edit section
 }
 
@@ -69,7 +69,7 @@ export default function CreateEditInvoice({
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const router = useRouter();
 
-  const fetchData = async () => {
+const fetchData = async () => {
     try {
       setIsLoading(true);
       const response = await fetch(`/api/invoice?invoiceId=${invoiceId}`);
@@ -89,18 +89,33 @@ export default function CreateEditInvoice({
     }
   };
 
+
+
+
+
   //edit component
   useEffect(() => {
     if (invoiceId) {
       fetchData();
+
     }
   }, [invoiceId]);
 
-  //items
+
+    //items
   const { fields, append, remove } = useFieldArray({
     control,
     name: "items",
   });
+
+
+
+
+  
+
+  
+  
+
 
   //total of items
   const items = watch("items");
@@ -197,6 +212,8 @@ export default function CreateEditInvoice({
     style: "currency",
     currency: currency || watch("currency") || "INR",
   }).format(totalAmount);
+
+  
 const onError = (error: any) => {
   console.log("validaation Error",error)
 }

@@ -1,7 +1,7 @@
 
 
 import { ArrowLeft } from 'lucide-react';
-import CreateEditInvoice from '../../_component/CreateEditInvoice/page';
+import CreateEditInvoice from "@/app/(dashboard)/_component/CreateEditInvoice"
 import Link from 'next/link';
 import { buttonVariants } from '@/components/ui/button';
 import { auth } from '@/lib/auth';

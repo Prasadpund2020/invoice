@@ -73,15 +73,22 @@ export async function GET(request: NextRequest) {
         await connectDB();
         const { searchParams } = new URL(request.url);
         const page=parseInt(searchParams.get('page') ||'1');
+        const invoiceId=searchParams.get("invoiceId")
         const limit = 10;
         const skip = (page-1)*limit;
+
+
+        const query={
+            ...(invoiceId &&{_id:invoiceId}),
+            userId: session.user.id
+        }
 
 
 
         
         const[allInvoice,totalCount]= await Promise.all([
-            InvoiceModel.find({ userId: session.user.id }).skip(skip).limit(limit).sort({createdAt:-1}),
-            InvoiceModel.countDocuments({userId: session.user.id })
+            InvoiceModel.find( query ).skip(skip).limit(limit).sort({createdAt:-1}),
+            InvoiceModel.countDocuments(query )
         ])
 
 

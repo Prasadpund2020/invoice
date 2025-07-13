@@ -7,7 +7,7 @@ interface ISignature{
     image:string
     }
 
-interface ISettings{
+ export interface ISettings{
 
     _id?:mongoose.Types.ObjectId
     invoiceLogo?:string;
