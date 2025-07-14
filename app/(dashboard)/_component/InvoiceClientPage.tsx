@@ -12,16 +12,18 @@ import { MoreVertical } from "lucide-react"
 import { ColumnDef, } from "@tanstack/react-table"
 import { format } from 'date-fns';
 import { DropdownMenu } from '@radix-ui/react-dropdown-menu';
-import {DropdownMenuContent,DropdownMenuItem,DropdownMenuTrigger} from "@/components/ui/dropdown-menu"
-import { Pagination,PaginationContent, PaginationItem,PaginationLink,PaginationNext,PaginationPrevious} from "@/components/ui/pagination"
+import { DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination"
 import { useRouter } from "next/navigation";
+import { Badge } from "@/components/ui/badge"
+
 
 
 
 
 interface IInvoiceClientPage {
     currency: string | undefined
-    userId:string |undefined
+    userId: string | undefined
 
 }
 
@@ -29,7 +31,7 @@ interface IInvoiceClientPage {
 
 
 
-export default function InvoiceClientPage({ currency,userId }: IInvoiceClientPage) {
+export default function InvoiceClientPage({ currency, userId }: IInvoiceClientPage) {
     const [data, setdata] = useState<IInvoice[]>([])
     const [isLoading, setIsLoading] = useState<boolean>(true)
     const [page, setPage] = useState<number>(1)
@@ -44,16 +46,17 @@ export default function InvoiceClientPage({ currency,userId }: IInvoiceClientPag
             const responseData = await response.json()
             if (response.status === 200) {
                 setdata(responseData.data || [])
-                setTotalPage(responseData.totalPage ||1)
+                setTotalPage(responseData.totalPage || 1)
 
             } else {
                 toast.error("something went wrong")
             }
 
         }
-        catch (error: any) {
-            console.log(error)
+        catch (error: unknown) {
+            console.log(error);
         }
+
         finally {
             setIsLoading(false)
 
@@ -64,6 +67,33 @@ export default function InvoiceClientPage({ currency,userId }: IInvoiceClientPag
         fetchdata()
 
     }, [page])
+
+    const handleSendEmail = async (invoiceId: string, subject: string) => {
+        try {
+            toast.loading("please wait");
+            const response = await (`/api/email/${invoiceId}`, {
+                method: "post",
+                body: JSON.stringify({
+                    subject: subject
+                })
+            })
+            const responsedata= await response.json()
+
+            if(response.status === 200){
+                toast.success(responsedata.message)
+
+
+            }
+
+        } catch (error) {
+            console.log(error)
+
+        }
+        finally {
+            toast.dismiss("")
+        }
+
+    }
 
     const columns: ColumnDef<IInvoice>[] = [
         {
@@ -93,10 +123,7 @@ export default function InvoiceClientPage({ currency,userId }: IInvoiceClientPag
 
 
 
-        {
-            accessorKey: "from.name",
-            header: "sender name",
-        },
+
         {
             accessorKey: "total",
             header: "Amount",
@@ -108,14 +135,26 @@ export default function InvoiceClientPage({ currency,userId }: IInvoiceClientPag
                 return totalAmountInCurrencyFormat
             }
         },
+
+
+        {
+            accessorKey: "status",
+            header: "status",
+            cell: ({ row }) => {
+                return <Badge>
+                    {row.original.status}
+                </Badge>
+            }
+
+        },
         {
             accessorKey: "_id",
             header: "Action",
             cell: ({ row }) => {
-                const invoiceId =row.original._id
+                const invoiceId = row.original._id?.toString()
                 return (
 
-        
+
                     <DropdownMenu>
                         <DropdownMenuTrigger>
                             <span className="sr-only">Open menu</span>
@@ -124,16 +163,16 @@ export default function InvoiceClientPage({ currency,userId }: IInvoiceClientPag
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
 
-                            <DropdownMenuItem onClick ={()=>router.push(`/api/invoice/${userId}/${invoiceId}`)}>
+                            <DropdownMenuItem onClick={() => router.push(`/api/invoice/${userId}/${invoiceId}`)}>
                                 View
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick ={()=>router.push(`/invoice/edit/${invoiceId}`)}>
+                            <DropdownMenuItem onClick={() => router.push(`/invoice/edit/${invoiceId}`)}>
                                 Edit
                             </DropdownMenuItem>
-                            <DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => router.push(`/invoice/paid/${invoiceId}`)}>
                                 Paid
                             </DropdownMenuItem>
-                            <DropdownMenuItem>
+                            <DropdownMenuItem onClick={()=>handleSendEmail(invoiceId as string,`Invoice From ${row.original.from.name}`)}>
                                 Send Email
                             </DropdownMenuItem>
                         </DropdownMenuContent>
@@ -178,50 +217,50 @@ export default function InvoiceClientPage({ currency,userId }: IInvoiceClientPag
                             data={data} />
 
 
-                            {
-                                totalPage !== 1 &&(
-                                     <div className="my-5">
-                            <Pagination >
-                                <PaginationContent>
+                        {
+                            totalPage !== 1 && (
+                                <div className="my-5">
+                                    <Pagination >
+                                        <PaginationContent>
 
-                                    <PaginationItem>
-                                        <PaginationPrevious href="#" onClick={() => {
-                                            setPage(1)
+                                            <PaginationItem>
+                                                <PaginationPrevious href="#" onClick={() => {
+                                                    setPage(1)
 
-                                        }} />
-                                    </PaginationItem>
-                                    {
-                                        new Array(totalPage).fill(null).map((item, index: number) => {
-                                            return <PaginationItem key={index}>
-                                                <PaginationLink href="#"onClick={() => {
-                                            setPage(index+1)
+                                                }} />
+                                            </PaginationItem>
+                                            {
+                                                new Array(totalPage).fill(null).map((item, index: number) => {
+                                                    return <PaginationItem key={index}>
+                                                        <PaginationLink href="#" onClick={() => {
+                                                            setPage(index + 1)
+                                                        }
+
+                                                        }  >{index + 1}</PaginationLink>
+                                                    </PaginationItem>
+                                                })
+                                            }
+
+
+
+
+                                            <PaginationItem>
+                                                <PaginationNext href="#" onClick={() => {
+                                                    setPage(totalPage)
                                                 }
 
-                                        }  >{index + 1}</PaginationLink>
+                                                } />
                                             </PaginationItem>
-                                        })
-                                    }
 
 
+                                        </PaginationContent>
+                                    </Pagination>
+                                </div>
+
+                            )
+                        }
 
 
-                                    <PaginationItem>
-                                        <PaginationNext href="#" onClick={() => {
-                                            setPage(totalPage)
-                                        }
-
-                                        } />
-                                    </PaginationItem>
-
-
-                                </PaginationContent>
-                            </Pagination>
-                        </div>
-
-                                )
-                            }
-
-                       
                     </>
                 )
             }

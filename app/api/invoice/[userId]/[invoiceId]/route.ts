@@ -2,7 +2,6 @@ import { NextResponse } from 'next/server';
 import { NextRequest } from 'next/server';
 import { connectDB } from "@/lib/connectDB"
 import { jsPDF } from "jspdf";
-import { headers } from 'next/headers';
 import SettingModel, { ISettings } from '@/models/settings.model';
 import InvoiceModel, { IInvoice } from '@/models/invoice.model';
 import { format } from 'date-fns';
@@ -12,7 +11,7 @@ import CurrencyFormat from '@/lib/CurrencyFormat';
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ invoiceId: string, userId: string }> }) {
     try {
-        const { userId, invoiceId } = await params
+        const { userId, invoiceId } = await params;
         console.log(invoiceId, userId)
 
         await connectDB()
@@ -113,7 +112,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
 
 
-        invoice.items.forEach((item, index) => {
+        invoice.items.forEach((item) => {
             Yaxis = Yaxis + 6
 
             doc.text(`${item.item_name}`, ITEMS_XAXIS, Yaxis)
@@ -132,54 +131,36 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
 
 
-        const subtotal_remove_discount = Number(invoice.sub_total) - Number(invoice.discount)
+        const subtotal_remove_discount = invoice.sub_total - (invoice.discount || 0)
         doc.text(`${subtotal_remove_discount}`, FULL_WIDTH - 15, Yaxis + 25, { align: "right" })
 
-        doc.text(`Tax ${invoice.tax_percentage} %`, 160, Yaxis + 30)
-        const taxAmount = (subtotal_remove_discount * Number(invoice.tax_percentage)) / 100
+        //tax percentage
+        doc.text(`Tax ${invoice.tax_percentage}% :`, 160, Yaxis + 30)
+        let taxAmount = 0
+        if (invoice.tax_percentage) {
+            taxAmount = (subtotal_remove_discount * Number(invoice.tax_percentage)) / 100
+        }
         doc.text(`${taxAmount}`, FULL_WIDTH - 15, Yaxis + 30, { align: "right" })
 
+
+        //total amount
         doc.setFont('times', "bold")
-        const totalAmount = Number(invoice.total) - Number(taxAmount)
-        doc.text(`Total`, 160, Yaxis + 35)
+        const totalAmount = Number(subtotal_remove_discount) + Number(taxAmount) //this line will be change
+        doc.text(`Total :`, 160, Yaxis + 35)
         doc.text(`${totalAmount}`, FULL_WIDTH - 15, Yaxis + 35, { align: "right" })
 
 
-
-        doc.setFont('times', "bold")
-        // Larger size, e.g., double the original
-        doc.addImage(settings.signature?.image as string, FULL_WIDTH - 65, Yaxis + 40, 60, 25);
+        //signature
+        doc.setFont('times', "normal")
+        doc.addImage(settings.signature?.image as string, FULL_WIDTH - 60, Yaxis + 40, 50, 20)
         doc.text(`${settings.signature?.name as string}`, FULL_WIDTH - 15, Yaxis + 60, { align: "right" })
 
- 
 
+        //notes
         doc.setFont('times', "bold")
-        doc.text("Notes:", 15, Yaxis + 70)
+        doc.text("Notes : ", 15, Yaxis + 70)
         doc.setFont('times', "normal")
-        doc.text(`${invoice.notes}`,15,Yaxis+75)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+        doc.text(`${invoice.notes}`, 15, Yaxis + 75)
 
 
         const pdfBuffer = Buffer.from(doc.output('arraybuffer'))
@@ -190,12 +171,19 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
                 "content-disposition": "inline"
             }
         })
-    } catch (error: any) {
-        console.log(error)
-        return NextResponse.json({
-            message: error || error.message || "something went wrong"
-        })
+    } catch (error) {
+        console.log(error);
 
+        let errorMessage = "Something went wrong";
+
+        if (error instanceof Error) {
+            errorMessage = error.message;
+        }
+
+        return NextResponse.json({
+            message: errorMessage
+        });
     }
+
 
 }

@@ -20,6 +20,7 @@ import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import { Textarea } from "@/components/ui/textarea";
 
+
 interface ICreateEditInvoice {
   firstName?: string | undefined;
   lastName?: string | undefined;
@@ -84,6 +85,7 @@ const fetchData = async () => {
         });
       }
     } catch (error) {
+      console.log("error",error)
     } finally {
       setIsLoading(false);
     }
@@ -134,7 +136,7 @@ const fetchData = async () => {
   }, [JSON.stringify(items), setValue]);
 
   //add new item row
-  const handleAddNewItemRow = (e: any) => {
+  const handleAddNewItemRow = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     append({
       item_name: "",
@@ -147,6 +149,10 @@ const fetchData = async () => {
   const handleRemoveItem = (index: number) => {
     remove(index);
   };
+
+
+
+  
 
   const onSubmit = async (data: z.infer<typeof InvoiceSchemaZod>) => {
     console.log("onSubmit",data);
@@ -182,7 +188,7 @@ const fetchData = async () => {
           ...data,
         }),
       });
-      const responseData = await response.json();
+      await response.json();
 
       if (response.status === 200) {
         toast.success("Invoice updated Successfully");
@@ -214,13 +220,11 @@ const fetchData = async () => {
   }).format(totalAmount);
 
   
-const onError = (error: any) => {
-  console.log("validaation Error",error)
-}
+
   return (
     <form
       className="grid py-4 gap-4 lg:gap-6"
-      onSubmit={handleSubmit(onSubmit, onError)}
+      onSubmit={handleSubmit(onSubmit)}
     >
       <div className="grid grid-cols-2 gap-4 lg:gap-6">
         <div className="grid">

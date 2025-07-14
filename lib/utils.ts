@@ -16,4 +16,6 @@ export const currencyOption = {
   ZEC: 'ZEC'
 };
 
+
+export type TCurrencyKey = keyof typeof currencyOption
  
