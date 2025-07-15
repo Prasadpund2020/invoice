@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 //component for proected page
 export default async function ProtectedPage() {
     const session = await auth();
-    console.log("session",session)
+   // console.log("session",session)
 
     if(!session) {
         console.log("session not found")
