@@ -4,7 +4,7 @@ export default function Logo(){
     return (
         <div>
             <Image
-                src="/Invoice-ly (2).png"
+                src="/Invoice-ly.png"
                 alt="generate invoice"
                 width={240}
                 height={30}
