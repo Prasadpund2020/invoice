@@ -1,6 +1,7 @@
 import { Resend } from 'resend';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const resend = new Resend(process.env.AUTH_RESEND_KEY);
+console.log("key",resend)
 
 export async function sendEmail(to:string, subject:string,reactHTML: any){
     const { data, error } = await resend.emails.send({

@@ -12,7 +12,7 @@ import CurrencyFormat from '@/lib/CurrencyFormat';
 export async function GET(request: NextRequest, { params }: { params: Promise<{ invoiceId: string, userId: string }> }) {
     try {
         const { userId, invoiceId } = await params;
-        console.log(invoiceId, userId)
+       // console.log(invoiceId, userId)
 
         await connectDB()
         const settings: ISettings | null = await SettingModel.findOne({ userId: userId })

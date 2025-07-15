@@ -71,7 +71,7 @@ export default function InvoiceClientPage({ currency, userId }: IInvoiceClientPa
     const handleSendEmail = async (invoiceId: string, subject: string) => {
         try {
             toast.loading("please wait");
-            const response = await (`/api/email/${invoiceId}`, {
+            const response = await fetch(`/api/email/${invoiceId}`, {
                 method: "post",
                 body: JSON.stringify({
                     subject: subject
@@ -90,7 +90,10 @@ export default function InvoiceClientPage({ currency, userId }: IInvoiceClientPa
 
         }
         finally {
-            toast.dismiss("")
+            setTimeout(() => {
+                toast.dismiss()
+                
+            }, 2000);
         }
 
     }

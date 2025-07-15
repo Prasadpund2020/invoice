@@ -37,7 +37,7 @@ export default  function UserEditProfile({firstName,lastName,email,currency}: Us
         const [isLoading, setIsLoading] = useState<boolean>(false);
         const router = useRouter();
         const onSubmit = async (data: z.infer<typeof onboardingSchema>) => {
-            console.log(data);
+           // console.log(data);
             try {
                 setIsLoading(true);
                 const response = await fetch('/api/user', {
