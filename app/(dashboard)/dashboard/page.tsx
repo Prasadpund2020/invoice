@@ -2,19 +2,17 @@
 import {
   Card,
   CardContent,
- 
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { ChartInvoice } from "@/app/(dashboard)/_component/ChartInvoice"
+import { ChartInvoice } from "@/app/(dashboard)/_component/ChartInvoice";
 import { ChartConfig } from "@/components/ui/chart";
 import { useEffect, useState } from "react";
 import { IInvoice } from "@/models/invoice.model";
-import { DataTable }  from "@/components/ui/DataTable";
+import { DataTable } from "@/components/ui/DataTable";
 import { Badge } from "@/components/ui/badge";
 import { ColumnDef } from "@tanstack/react-table";
 import { format } from "date-fns";
-
 
 const chartConfig = {
   visitors: {
@@ -45,7 +43,6 @@ export default function DashboardPage() {
       const response = await fetch("/api/dashboard");
       const responseData = await response.json();
 
-      //console.log("responseData",responseData)
       if (response.status === 200) {
         setData({
           totalRevenue: responseData.totalRevenue,
@@ -65,7 +62,7 @@ export default function DashboardPage() {
     fetchData();
   }, []);
 
-   const columns: ColumnDef<IInvoice>[] = [
+  const columns: ColumnDef<IInvoice>[] = [
     {
       accessorKey: "invoice_no",
       header: "Invoice No",
@@ -76,7 +73,7 @@ export default function DashboardPage() {
       cell: ({ row }) => {
         return format(row.original.invoice_date, "PP");
       },
-    }, 
+    },
     {
       accessorKey: "total",
       header: "Amount",
@@ -90,15 +87,16 @@ export default function DashboardPage() {
       },
     },
     {
-       accessorKey : "status",
-       header : "Status",
-       cell : ({row})=>{
-        return <Badge>{row.original.status}</Badge>
-       }
+      accessorKey: "status",
+      header: "Status",
+      cell: ({ row }) => {
+        return <Badge>{row.original.status}</Badge>;
+      },
     },
   ];
+
   return (
-    <div className="p-4 grid gap-6  lg:grid-cols-4">
+    <div className="p-4 grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
       <Card className="grid gap-3">
         <CardHeader>
           <CardTitle className="text-xl">Total Revenue</CardTitle>
@@ -147,28 +145,23 @@ export default function DashboardPage() {
         </CardContent>
       </Card>
 
-      {/***chart */}
-      <ChartInvoice chartConfig={chartConfig} chartData={data.chartData} />
+      <div className="col-span-1 sm:col-span-2 lg:col-span-4">
+        <ChartInvoice chartConfig={chartConfig} chartData={data.chartData} />
+      </div>
 
-      {/***latest 10 Invoice last 30days */}
-      <Card className="lg:col-span-2">
+      <Card className="col-span-1 sm:col-span-2 lg:col-span-4">
         <CardHeader>
           <CardTitle>Recent Invoice</CardTitle>
         </CardHeader>
         <CardContent>
-            {
-                data?.recentInvoice?.length == 0 ? (
-                    <p className="py-4 text-center">No invoice found</p>
-                ) : (
-                    <DataTable
-                        data={data?.recentInvoice}
-                        columns={columns}
-                    />
-                )
-            }
-
+          {data?.recentInvoice?.length === 0 ? (
+            <p className="py-4 text-center">No invoice found</p>
+          ) : (
+            <DataTable data={data?.recentInvoice} columns={columns} />
+          )}
         </CardContent>
       </Card>
+
     </div>
   );
 }
