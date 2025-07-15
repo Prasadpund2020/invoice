@@ -34,27 +34,23 @@ export async function POST(request: NextRequest) {
 
         //update document
         if (setting) {
-            const updateSetting = await SettingModel.findByIdAndUpdate(setting._id, payload);
+            await SettingModel.findByIdAndUpdate(setting._id, payload);
             return NextResponse.json({
                 message: "setting updated succesfully"
             })
-
-
         }
+
         //create the document 
-        const createSetting = await SettingModel.create(payload)
+        await SettingModel.create(payload)
 
         return NextResponse.json({
             message: "setting updated succesfully"
         })
 
-
-
-
-    } catch (error: any) {
+    } catch (error: unknown) { // <-- only this changed from 'any' to 'unknown'
         return NextResponse.json(
             {
-                message: error?.message || "something went wrong"
+                message: error instanceof Error ? error.message : "something went wrong"
             },
             { status: 500 }
         );
@@ -62,8 +58,9 @@ export async function POST(request: NextRequest) {
 }
 
 
+
 //get data
-export async function GET(request: NextRequest) {
+export async function GET() { // removed unused `request`
     try {
         const session = await auth();
         if (!session) {
@@ -83,10 +80,10 @@ export async function GET(request: NextRequest) {
             data: getData
         });
 
-    } catch (error: any) {
+    } catch (error: unknown) { // changed from 'any' to 'unknown'
         return NextResponse.json(
             {
-                message: error?.message || "something went wrong"
+                message: error instanceof Error ? error.message : "something went wrong"
             },
             { status: 500 }
         );

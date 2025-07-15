@@ -39,34 +39,26 @@ export default function InvoiceClientPage({ currency, userId }: IInvoiceClientPa
     const router = useRouter();
 
 
-    const fetchdata = async () => {
+   useEffect(() => {
+    const fetchData = async () => {
         try {
-            setIsLoading(true)
-            const response = await fetch(`/api/invoice? page=${page}`)
-            const responseData = await response.json()
+            setIsLoading(true);
+            const response = await fetch(`/api/invoice?page=${page}`);
+            const responseData = await response.json();
             if (response.status === 200) {
-                setdata(responseData.data || [])
-                setTotalPage(responseData.totalPage || 1)
-
+                setdata(responseData.data || []);
+                setTotalPage(responseData.totalPage || 1);
             } else {
-                toast.error("something went wrong")
+                toast.error("something went wrong");
             }
-
-        }
-        catch (error: unknown) {
+        } catch (error: unknown) {
             console.log(error);
+        } finally {
+            setIsLoading(false);
         }
-
-        finally {
-            setIsLoading(false)
-
-        }
-
-    }
-    useEffect(() => {
-        fetchdata()
-
-    }, [page])
+    };
+    fetchData();
+}, [page]);
 
     const handleSendEmail = async (invoiceId: string, subject: string) => {
         try {

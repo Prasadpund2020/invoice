@@ -1,24 +1,41 @@
 "use client"
 
 import * as React from "react"
-import { Area, AreaChart, CartesianGrid, XAxis,  } from "recharts"
+import { Area, AreaChart, CartesianGrid, XAxis } from "recharts"
 
-import {Card,CardContent} from "@/components/ui/card"
-import {ChartConfig,ChartContainer,ChartLegend,ChartLegendContent,ChartTooltip,ChartTooltipContent,} from "@/components/ui/chart"
+import { Card, CardContent } from "@/components/ui/card"
+import {
+  ChartConfig,
+  ChartContainer,
+  ChartLegend,
+  ChartLegendContent,
+  ChartTooltip,
+  ChartTooltipContent,
+} from "@/components/ui/chart"
 
+import { Button } from "@/components/ui/button"
 
 export const description = "An interactive area chart"
 
 
-interface IChartInvoice {
-    chartData : any;
-    chartConfig : ChartConfig
+
+
+interface InvoiceData {
+  date: string
+  totalRevenue: number
+  paidRevenue: number
 }
 
-export function ChartInvoice({chartData,chartConfig} : IChartInvoice) {
+interface IChartInvoice {
+  chartData: InvoiceData[]
+  chartConfig: ChartConfig
+}
+
+
+export function ChartInvoice({ chartData, chartConfig }: IChartInvoice) {
   const [timeRange, setTimeRange] = React.useState("90d")
 
-  const filteredData = chartData?.filter((item : any) => {
+  const filteredData = chartData?.filter((item) => {
     const date = new Date(item.date)
     const referenceDate = new Date("2024-06-30")
     let daysToSubtract = 90
@@ -34,10 +51,32 @@ export function ChartInvoice({chartData,chartConfig} : IChartInvoice) {
 
   return (
     <Card className="p-0 col-span-2">
-        {/* <CardHeader>
-
-        </CardHeader> */}
       <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6">
+
+        <div className="flex gap-2 mb-4">
+          <Button
+            variant={timeRange === "7d" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setTimeRange("7d")}
+          >
+            7d
+          </Button>
+          <Button
+            variant={timeRange === "30d" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setTimeRange("30d")}
+          >
+            30d
+          </Button>
+          <Button
+            variant={timeRange === "90d" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setTimeRange("90d")}
+          >
+            90d
+          </Button>
+        </div>
+
         <ChartContainer
           config={chartConfig}
           className="aspect-auto h-80 lg:h-96 w-full"
@@ -104,7 +143,7 @@ export function ChartInvoice({chartData,chartConfig} : IChartInvoice) {
               fill="url(#fillPaidRevenue)"
               stroke="var(--color-paidRevenue)"
               stackId="a"
-               name="Paid Revenue"
+              name="Paid Revenue"
             />
             <Area
               dataKey="totalRevenue"
@@ -114,7 +153,7 @@ export function ChartInvoice({chartData,chartConfig} : IChartInvoice) {
               stackId="a"
               name="Total Revenue"
             />
-            <ChartLegend content={<ChartLegendContent   />} />
+            <ChartLegend content={<ChartLegendContent />} />
           </AreaChart>
         </ChartContainer>
       </CardContent>

@@ -31,6 +31,7 @@ export async function connectDB() {
   try {
     cached.conn = await cached.promise;
   } catch (error) {
+    console.log(error)
     cached.promise = null;
     process.exit(1);
   }

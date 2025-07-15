@@ -6,6 +6,7 @@ import { connectDB } from "@/lib/connectDB"
 import { InvoiceTemplate } from "@/components/template/SendInvoiceEmail"
 import { currencyOption, TCurrencyKey } from "@/lib/utils";
 import { format } from 'date-fns';
+import { ReactNode } from "react";
 
 
 
@@ -41,7 +42,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         dueDate : format(invoiceData.due_date,"PPP"),
         total : `${currencyOption[invoiceData.currency as TCurrencyKey ]} ${invoiceData.total}`,
         invoiceURL :invoiceURL ,
-      })
+      }) as ReactNode
     );
     return NextResponse.json({
       message:"email send succesfully",

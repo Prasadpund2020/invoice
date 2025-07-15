@@ -82,25 +82,29 @@ export default function SettingPage() {
         fetchData()
 
     }, [])
-const handleSubmit = async (e: React.FormEvent<HTMLFormElement>, data: any) => {
-    e.preventDefault();
-    try {
-        setIsLoading(true);
-        const response = await fetch("/api/settinggs", {
-            method: 'POST',
-            body: JSON.stringify(data)
-        });
-        if (response.status === 200) {
-            toast.success("Settings updated successfully");
-            fetchData();
-        }
-    } catch (error: any) {
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>, data: { logo?: string | undefined, signature?: TSignatureData | undefined}) => {
+        e.preventDefault();
+        try {
+            setIsLoading(true);
+            const response = await fetch("/api/settinggs", {
+                method: 'POST',
+                body: JSON.stringify(data)
+            });
+            if (response.status === 200) {
+                toast.success("Settings updated successfully");
+                fetchData();
+            }
+        } 
+       catch (error: unknown) {
+    if (error instanceof Error) {
+        toast.error(error.message);
+    } else {
         toast.error("Something went wrong..");
-    } finally {
-        setIsLoading(false);
     }
-};
-
+} finally {
+    setIsLoading(false);
+}
+    };
 
     return (
         <div className="p-4">
@@ -110,7 +114,7 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>, data: any) => {
                 <AccordionItem value="Invoice-Logo">
                     <AccordionTrigger className="font-semibold text-base cursor-pointer">Invoice Logo</AccordionTrigger>
                     <AccordionContent>
-                        <form className="space-y-4 max-w-xs" onSubmit={(e)=> handleSubmit(e,{logo})}>
+                        <form className="space-y-4 max-w-xs" onSubmit={(e) => handleSubmit(e, { logo })}>
                             {/* Added label for clarity */}
                             <div className="flex flex-col space-y-2">
                                 <label className="text-sm font-medium">Upload Invoice Logo</label>
@@ -134,7 +138,9 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>, data: any) => {
                                     <p className="text-center text-muted-foreground">No Logo</p>
                                 )}
                             </div>
-                            <Button className="w-full">Save</Button>
+                            <Button className="w-full" disabled={isLoading}>
+                                {isLoading ? "Saving..." : "Save"}
+                            </Button>
                         </form>
                     </AccordionContent>
                 </AccordionItem>
@@ -144,7 +150,7 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>, data: any) => {
                     <AccordionTrigger className="font-semibold text-base cursor-pointer">Invoice Signature</AccordionTrigger>
                     <AccordionContent>
                         <form className="space-y-4 max-w-xs" onSubmit={(e) => handleSubmit(e, { signature: signatureData })}
->
+                        >
                             <div className="flex flex-col space-y-2">
                                 <label className="text-sm font-medium">Signature Name</label>
                                 <Input

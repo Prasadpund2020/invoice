@@ -70,7 +70,15 @@ export default function CreateEditInvoice({
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const router = useRouter();
 
-const fetchData = async () => {
+
+
+
+
+
+  //edit component
+  // 👇 REMOVE fetchData from here, MOVE IT INSIDE useEffect as you asked.
+useEffect(() => {
+  const fetchData = async () => {
     try {
       setIsLoading(true);
       const response = await fetch(`/api/invoice?invoiceId=${invoiceId}`);
@@ -85,23 +93,17 @@ const fetchData = async () => {
         });
       }
     } catch (error) {
-      console.log("error",error)
+      console.log("error", error);
     } finally {
       setIsLoading(false);
     }
   };
 
+  if (invoiceId) {
+    fetchData();
+  }
+}, [invoiceId, reset]);
 
-
-
-
-  //edit component
-  useEffect(() => {
-    if (invoiceId) {
-      fetchData();
-
-    }
-  }, [invoiceId]);
 
 
     //items
@@ -122,18 +124,18 @@ const fetchData = async () => {
   //total of items
   const items = watch("items");
   useEffect(() => {
-    items.forEach((item, index) => {
-      const quantity = parseFloat(item.quantity.toString()) || 0;
-      const price = parseFloat(item.price.toString()) || 0;
+  items.forEach((item, index) => {
+    const quantity = parseFloat(item.quantity.toString()) || 0;
+    const price = parseFloat(item.price.toString()) || 0;
 
-      const total = quantity * price;
+    const total = quantity * price;
+    setValue(`items.${index}.total`, total);
+  });
 
-      // console.log(total);
-      setValue(`items.${index}.total`, total);
-    });
-    const sub_total = items.reduce((preve, curr) => preve + curr.total, 0);
-    setValue("sub_total", sub_total);
-  }, [JSON.stringify(items), setValue]);
+  const sub_total = items.reduce((prev, curr) => prev + (curr.total || 0), 0);
+  setValue("sub_total", sub_total);
+}, [items, setValue]);
+
 
   //add new item row
   const handleAddNewItemRow = (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -211,8 +213,8 @@ const fetchData = async () => {
   const totalAmount = sub_totalRemoveDiscount - taxAmount;
 
   useEffect(() => {
-    setValue("total", totalAmount);
-  }, [totalAmount]);
+  setValue("total", totalAmount);
+}, [totalAmount, setValue]);
 
   const totalAmountInCurrencyFormat = new Intl.NumberFormat("en-us", {
     style: "currency",

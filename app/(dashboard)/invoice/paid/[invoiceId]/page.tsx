@@ -13,7 +13,7 @@ import { IInvoice } from "@/models/invoice.model";
 import { ArrowLeft, CheckIcon } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import toast from "react-hot-toast";
 
 export default function PaidInvoicePage() {
@@ -21,25 +21,26 @@ export default function PaidInvoicePage() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const { invoiceId } = useParams();
 
-  const fetchData = async () => {
-    try {
-      setIsLoading(true);
-      const response = await fetch(`/api/invoice?invoiceId=${invoiceId}`);
-      const responseData = await response.json();
+ const fetchData = useCallback(async () => {
+  try {
+    setIsLoading(true);
+    const response = await fetch(`/api/invoice?invoiceId=${invoiceId}`);
+    const responseData = await response.json();
 
-      if (response.status === 200) {
-        const invoiceData = responseData.data[0];
-        setData(invoiceData);
-      }
-    } catch (error) {
-    } finally {
-      setIsLoading(false);
+    if (response.status === 200) {
+      const invoiceData = responseData.data[0];
+      setData(invoiceData);
     }
-  };
+  } catch (error) {
+    console.log(error);
+  } finally {
+    setIsLoading(false);
+  }
+}, [invoiceId]);
 
-  useEffect(() => {
-    fetchData();
-  }, []);
+useEffect(() => {
+  fetchData();
+}, [fetchData]);
 
   const handleUpdate = async()=>{
     try {
@@ -52,7 +53,7 @@ export default function PaidInvoicePage() {
                 status : "PAID"
             })
         })
-        const responseData = await response.json()
+         await response.json()
 
         if(response.status === 200){
             fetchData();
