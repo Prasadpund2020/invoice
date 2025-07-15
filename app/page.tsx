@@ -11,25 +11,18 @@ export default function Home() {
 
         {/* 🔧 Made header taller on larger screens, padding adjusts with screen */}
         <header className="flex items-center backdrop-blur-2xl px-4 py-4 lg:py-8">
-          <div className="container mx-auto flex items-center justify-between gap-4">
-            <div className="flex items-center gap-4">
-              <Logo />
-              {/* Optional: Move button below logo on mobile */}
-              <Link
-                href={"/login"}
-                className={`${buttonVariants()} hidden sm:inline-block`} // Hide on small screens
-              >
-                Get Started
-              </Link>
-            </div>
-            <Link
-              href={"/login"}
-              className={`${buttonVariants()} sm:hidden`} // Show only on mobile
-            >
-              Get Started
-            </Link>
-          </div>
-        </header>
+  <div className="container mx-auto flex items-center justify-between gap-4">
+    <Logo />   {/* Left side: Logo stays left */}
+
+    <Link
+      href={"/login"}
+      className={buttonVariants()}   // Right side: Button stays right
+    >
+      Get Started
+    </Link>
+  </div>
+</header>
+
 
         <section className="px-4">
           <div className="flex items-center justify-center mt-14 lg:mt-28 flex-col gap-4 text-center">
