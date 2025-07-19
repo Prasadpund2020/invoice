@@ -11,17 +11,17 @@ export default function Home() {
 
         {/* 🔧 Made header taller on larger screens, padding adjusts with screen */}
         <header className="flex items-center backdrop-blur-2xl px-4 py-4 lg:py-8">
-  <div className="container mx-auto flex items-center justify-between gap-4">
-    <Logo />   {/* Left side: Logo stays left */}
+          <div className="container mx-auto flex items-center justify-between gap-4">
+            <Logo />   {/* Left side: Logo stays left */}
 
-    <Link
-      href={"/login"}
-      className={buttonVariants()}   // Right side: Button stays right
-    >
-      Get Started
-    </Link>
-  </div>
-</header>
+            <Link
+              href={"/login"}
+              className={buttonVariants()}   // Right side: Button stays right
+            >
+              Get Started
+            </Link>
+          </div>
+        </header>
 
 
         <section className="px-4">
