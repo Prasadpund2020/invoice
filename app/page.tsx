@@ -15,7 +15,7 @@ export default function Home() {
             <Logo />   {/* Left side: Logo stays left */}
 
             <Link
-              href={"/login"}
+              href={"/Signup"}
               className={buttonVariants()}   // Right side: Button stays right
             >
               Get Started

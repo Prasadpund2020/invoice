@@ -12,7 +12,7 @@ import CurrencyFormat from '@/lib/CurrencyFormat';
 export async function GET(request: NextRequest, { params }: { params: Promise<{ invoiceId: string, userId: string }> }) {
     try {
         const { userId, invoiceId } = await params;
-       // console.log(invoiceId, userId)
+        // console.log(invoiceId, userId)
 
         await connectDB()
         const settings: ISettings | null = await SettingModel.findOne({ userId: userId })
@@ -55,9 +55,10 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
         doc.setFillColor(COLOR_CODE)
         doc.rect(0, 0, FULL_WIDTH, 2, "F")
 
+        if (settings.invoiceLogo) {
+            doc.addImage(settings.invoiceLogo as string, 15, 13, 50, 15);
+        }
 
-
-        doc.addImage(settings.invoiceLogo as string, 15, 13, 50, 15)
 
         doc.setFontSize(25)
         doc.text("INVOICE", FULL_WIDTH - 15, 22, { align: "right" })

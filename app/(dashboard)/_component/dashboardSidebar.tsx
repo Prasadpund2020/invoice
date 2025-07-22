@@ -26,7 +26,7 @@ export default function DashboardSidebar({children}:{children:React.ReactNode}) 
                             <Link href={"/dashboard"}  className ={cn(pathname ==="/dashboard"&& "bg-white")}>
                             <LayoutDashboardIcon/>
                             <span>
-                                Dashboad
+                                Dashboard
                             </span>
                             </Link>
                         </SidebarMenuButton>

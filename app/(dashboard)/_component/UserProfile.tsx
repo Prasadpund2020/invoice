@@ -11,6 +11,7 @@ import {auth}from "@/lib/auth"
 
 export default async function UserProfile() {
     const session = await auth()
+    console.log("session",session)
     return (
 
         <Dialog>

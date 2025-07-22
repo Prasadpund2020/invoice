@@ -1,28 +1,31 @@
-import mongoose from 'mongoose';
+import  { Schema, models, model, Document } from "mongoose";
 
-interface IUser {
-    _id?: mongoose.Types.ObjectId;
+export interface IUser extends Document {
     firstName: string;
     lastName: string;
     email: string;
     emailVerified: Date | null;
     currency: string;
-    role: 'user' | 'admin';   // ✅ Added role field
+    role: 'user' | 'admin';
+    hashedPassword: string;
     createdAt?: Date;
     updatedAt?: Date;
 }
 
-const userSchema = new mongoose.Schema<IUser>({
-    firstName: { type: String, default: null },
-    lastName: { type: String, default: null },
-    email: { type: String, required: true, unique: true },
-    emailVerified: { type: Date, default: null },
-    currency: { type: String, default: 'USD' },
-    role: { type: String, enum: ['user', 'admin'], default: 'user' },  // ✅ Here
-}, {
-    timestamps: true,
-});
+const userSchema = new Schema<IUser>(
+    {
+        firstName: { type: String, default: null },
+        lastName: { type: String, default: null },
+        email: { type: String, required: true, unique: true },
+        emailVerified: { type: Date, default: null },
+        currency: { type: String, default: 'USD' },
+        hashedPassword: { type: String, required: true },
+        role: { type: String, enum: ['user', 'admin'], default: 'user' },
+    },
+    { timestamps: true }
+);
 
-const UserModel = mongoose.models.user || mongoose.model<IUser>('User', userSchema);
+// ✅ Correct caching to prevent OverwriteModelError
+const UserModel = models.User || model<IUser>('User', userSchema);
 
 export default UserModel;

@@ -10,7 +10,9 @@ export default function AdminDashboardLayout({
     <SidebarProvider>
       <div className="flex min-h-screen">
         <DashboardSidebar />
-        <main className="flex-1 p-6 w-full max-w-screen-2xl mx-auto">{children}</main>
+        <main className="flex-1 p-6 w-full max-w-screen-2xl mx-auto">
+          {children}
+        </main>
       </div>
     </SidebarProvider>
   );

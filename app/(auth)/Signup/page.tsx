@@ -3,12 +3,12 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import Link from "next/link";
 import SubmitButton from "@/components/SubmitButton";
-import { signIn } from "next-auth/react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-export default function LoginPage() {
+export default function SignupPage() {
     const router = useRouter();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -18,24 +18,25 @@ export default function LoginPage() {
         e.preventDefault();
         setError("");
 
-        const res = await signIn("credentials", {
-            redirect: false,
-            email,
-            password,
+        const res = await fetch("/api/Signup", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, password }),
         });
 
-        if (res?.error) {
-            setError("Invalid email or password.");
+        if (res.ok) {
+            router.push("/login");
         } else {
-            router.push("/dashboard");
+            const data = await res.json();
+            setError(data.message || "Something went wrong.");
         }
     };
 
     return (
         <Card className="max-w-sm min-w-xs lg:min-w-sm">
             <CardHeader>
-                <CardTitle className="text-xl w-full">Login</CardTitle>
-                <CardDescription>Enter your credentials to access your account</CardDescription>
+                <CardTitle className="text-xl w-full">Sign up</CardTitle>
+                <CardDescription>Create your account to get started</CardDescription>
             </CardHeader>
             <CardContent>
                 <form className="grid gap-4" onSubmit={handleSubmit}>
@@ -63,18 +64,15 @@ export default function LoginPage() {
                             onChange={(e) => setPassword(e.target.value)}
                         />
                     </div>
-                    <SubmitButton title="Login" />
+                    <SubmitButton title="Sign up" />
                 </form>
                 {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
-                <p className="mt-4 text-sm text-center">
-                    Don&apos;t have an account?{" "}
-                    <span
-                        onClick={() => router.push("/Signup")}
-                        className="text-blue-600 hover:underline cursor-pointer"
-                    >
-                        Sign up
-                    </span>
-                </p>
+                <div className="text-sm text-center mt-4">
+                    Already have an account?{" "}
+                    <Link href="/login" className="underline hover:text-primary">
+                        Login
+                    </Link>
+                </div>
             </CardContent>
         </Card>
     );

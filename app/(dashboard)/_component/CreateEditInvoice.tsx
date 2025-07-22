@@ -210,7 +210,7 @@ useEffect(() => {
   const sub_totalRemoveDiscount = sub_total - discount;
   const taxAmount =
     (sub_totalRemoveDiscount * watch("tax_percentage")) / 100 || 0;
-  const totalAmount = sub_totalRemoveDiscount - taxAmount;
+  const totalAmount = sub_totalRemoveDiscount + taxAmount;
 
   useEffect(() => {
   setValue("total", totalAmount);
