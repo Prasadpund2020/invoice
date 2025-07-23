@@ -1,40 +1,45 @@
-import mongoose from "mongoose";
+import dotenv from "dotenv";
+dotenv.config({ path: ".env.local" }); // ✅ load .env.local manually
 
-const MONGODB_URI = process.env.MONGODB_URI!;
+
+import mongoose, { Connection } from "mongoose";
+
+
+const MONGODB_URI = process.env.MONGODB_URI;
+console.log("Loaded MONGODB_URI:", MONGODB_URI);
 
 if (!MONGODB_URI) {
-  throw new Error('MONGODB_URI is missing in .env file');
+  throw new Error("MONGODB_URI is missing in .env file");
 }
 
-let cached = global.mongoose;
+const globalCache = global.mongoose || {
+  conn: null as Connection | null,
+  promise: null as Promise<Connection> | null,
+};
 
-if (!cached) {
-  cached = global.mongoose = { conn: null, promise: null };
-}
+global.mongoose = globalCache;
 
-// connect db function
-export async function connectDB() {
-  if (cached.conn) {
-    return cached.conn;
+export async function connectDB(): Promise<Connection> {
+  if (globalCache.conn) {
+    return globalCache.conn;
   }
 
-  // promise is not available
-  if (!cached.promise) {
+  if (!globalCache.promise) {
     const options = {
       bufferCommands: false,
       maxPoolSize: 10,
     };
 
-    cached.promise = mongoose.connect(MONGODB_URI, options).then((mongoose) => mongoose);
+    globalCache.promise = mongoose.connect(MONGODB_URI!, options).then((mongooseInstance) => mongooseInstance.connection);
   }
 
   try {
-    cached.conn = await cached.promise;
+    globalCache.conn = await globalCache.promise;
   } catch (error) {
-    console.log(error)
-    cached.promise = null;
+    console.error("MongoDB connection error:", error);
+    globalCache.promise = null;
     process.exit(1);
   }
 
-  
+  return globalCache.conn;
 }
