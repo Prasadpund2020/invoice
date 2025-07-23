@@ -592,7 +592,7 @@ useEffect(() => {
             />
           </div>
           <div className="grid grid-cols-2">
-            <Label>Discount in Rs. : </Label>
+            <Label>Discount in $ : </Label>
             <Input
               placeholder="discount"
               type="number"
