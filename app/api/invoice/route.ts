@@ -16,36 +16,43 @@ export async function POST(request: NextRequest) {
             }, {
                 status: 401
             })
-
         }
-        const { invoice_no,
+
+        // ✅ CHANGED: Removed invoice_no from destructure (we'll generate it below)
+        const {
             invoice_date,
             due_date, currency,
             from, to, items,
             sub_total, discount,
-            tax_percentage, total, notes } = await request.json()
+            tax_percentage, total, notes
+        } = await request.json()
+
+        await connectDB();
+
+        // Inside your POST API:
+        const latestInvoice = await InvoiceModel.findOne({ userId: session.user.id }).sort({ invoice_no: -1 });
+        const nextInvoiceNo = latestInvoice ? String(Number(latestInvoice.invoice_no) + 1) : "1";
+
+        // Set invoice_no automatically, do NOT use from client
         const payload = {
-            invoice_no,
+            invoice_no: nextInvoiceNo, // ✅ use auto-generated value
             invoice_date,
-            due_date, currency: currency ?? "USD",
+            due_date,
+            currency: currency ?? "USD",
             from, to, items,
             sub_total, discount,
             tax_percentage, total,
             notes,
             status: "PAID",
             userId: session.user.id,
-        }
+        };
 
 
-
-        await connectDB();
         const data = await InvoiceModel.create(payload)
 
         return NextResponse.json({ message: "invoice created succesfully", data: data })
 
-
-    }
-    catch (error: unknown) {
+    } catch (error: unknown) {
         let message = "Something went wrong";
 
         if (error instanceof Error) {
@@ -59,8 +66,8 @@ export async function POST(request: NextRequest) {
             { status: 500 }
         );
     }
-
 }
+
 
 
 export async function GET(request: NextRequest) {
@@ -164,17 +171,17 @@ export async function PUT(request: NextRequest) {
         })
 
 
-    }catch (error: unknown) {
-    const message =
-        error instanceof Error ? error.message :
-        typeof error === "string" ? error :
-        "Something went wrong";
+    } catch (error: unknown) {
+        const message =
+            error instanceof Error ? error.message :
+                typeof error === "string" ? error :
+                    "Something went wrong";
 
-    return NextResponse.json(
-        { message },
-        { status: 500 }
-    );
-}
+        return NextResponse.json(
+            { message },
+            { status: 500 }
+        );
+    }
 
 
 

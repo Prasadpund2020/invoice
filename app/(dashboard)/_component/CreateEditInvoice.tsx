@@ -27,6 +27,8 @@ interface ICreateEditInvoice {
   email?: string | undefined | null;
   currency?: string | undefined;
   invoiceId?: string | undefined; //for edit section
+  invoiceNumber?: string; // ✅ Added for edit mode
+
 }
 
 export default function CreateEditInvoice({
@@ -48,9 +50,13 @@ export default function CreateEditInvoice({
   } = useForm<z.infer<typeof InvoiceSchemaZod>>({
     resolver: zodResolver(InvoiceSchemaZod),
     defaultValues: {
+      invoice_no: '',
       items: [
         {
           item_name: "",
+          item_description: "", // ✨ New field
+
+
           quantity: 0,
           price: 0,
           total: 0,
@@ -64,11 +70,37 @@ export default function CreateEditInvoice({
       currency: currency,
       discount: 0,
       sub_total: 0,
+
       total: 0,
     },
   });
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const router = useRouter();
+
+
+  const [nextInvoiceNo, setNextInvoiceNo] = useState<number | null>(null);
+
+  // ✅ Add setValue to the dependencies and call it after fetch
+  useEffect(() => {
+    const fetchNextInvoiceNo = async () => {
+      const res = await fetch("/api/invoice/next-number");
+      const data = await res.json();
+
+      setNextInvoiceNo(data.nextInvoiceNo);
+      // ✅ Safe to use setValue here — no need to include in deps
+      setValue("invoice_no", data.nextInvoiceNo);
+    };
+
+    if (!invoiceId) {
+      fetchNextInvoiceNo();
+    }
+    // ✅ Do not include setValue here
+  }, [invoiceId, setValue]);
+
+
+
+
+
 
 
 
@@ -77,36 +109,40 @@ export default function CreateEditInvoice({
 
   //edit component
   // 👇 REMOVE fetchData from here, MOVE IT INSIDE useEffect as you asked.
-useEffect(() => {
-  const fetchData = async () => {
-    try {
-      setIsLoading(true);
-      const response = await fetch(`/api/invoice?invoiceId=${invoiceId}`);
-      const responseData = await response.json();
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setIsLoading(true);
 
-      if (response.status === 200) {
-        const invoiceData = responseData.data[0];
-        reset({
-          ...invoiceData,
-          invoice_date: new Date(invoiceData.invoice_date),
-          due_date: new Date(invoiceData.due_date),
-        });
+        const response = await fetch(`/api/invoice?invoiceId=${invoiceId}`);
+        const responseData = await response.json();
+
+        if (response.status === 200 && responseData.data?.length > 0) {
+          const invoiceData = responseData.data[0];
+
+          reset({
+            ...invoiceData,
+            invoice_no: String(invoiceData.invoice_no ?? ''),
+            invoice_date: new Date(invoiceData.invoice_date), // ✅ Convert to Date
+            due_date: new Date(invoiceData.due_date),         // ✅ Convert to Date
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching invoice data:", error);
+      } finally {
+        setIsLoading(false);
       }
-    } catch (error) {
-      console.log("error", error);
-    } finally {
-      setIsLoading(false);
+    };
+
+    if (invoiceId) {
+      fetchData();
     }
-  };
-
-  if (invoiceId) {
-    fetchData();
-  }
-}, [invoiceId, reset]);
+  }, [invoiceId, reset]);
 
 
 
-    //items
+
+  //items
   const { fields, append, remove } = useFieldArray({
     control,
     name: "items",
@@ -115,38 +151,41 @@ useEffect(() => {
 
 
 
-  
 
-  
-  
+
+
+
 
 
   //total of items
   const items = watch("items");
   useEffect(() => {
-  items.forEach((item, index) => {
-    const quantity = parseFloat(item.quantity.toString()) || 0;
-    const price = parseFloat(item.price.toString()) || 0;
+    items.forEach((item, index) => {
+      const quantity = parseFloat(item.quantity.toString()) || 0;
+      const price = parseFloat(item.price.toString()) || 0;
 
-    const total = quantity * price;
-    setValue(`items.${index}.total`, total);
-  });
+      const total = quantity * price;
+      setValue(`items.${index}.total`, total);
+    });
 
-  const sub_total = items.reduce((prev, curr) => prev + (curr.total || 0), 0);
-  setValue("sub_total", sub_total);
-}, [items, setValue]);
+    const sub_total = items.reduce((prev, curr) => prev + (curr.total || 0), 0);
+    setValue("sub_total", sub_total);
+  }, [items, setValue]);
 
 
   //add new item row
-  const handleAddNewItemRow = (e: React.MouseEvent<HTMLButtonElement>) => {
-    e.preventDefault();
-    append({
-      item_name: "",
-      quantity: 0,
-      price: 0,
-      total: 0,
-    });
-  };
+  const
+    handleAddNewItemRow = (e: React.MouseEvent<HTMLButtonElement>) => {
+      e.preventDefault();
+      append({
+        item_name: "",
+        quantity: 0,
+        item_description: "", // ✨ New field
+
+        price: 0,
+        total: 0,
+      });
+    };
   //remove item row
   const handleRemoveItem = (index: number) => {
     remove(index);
@@ -154,12 +193,12 @@ useEffect(() => {
 
 
 
-  
+
 
   const onSubmit = async (data: z.infer<typeof InvoiceSchemaZod>) => {
-   // console.log("onSubmit",data);
-   
-    
+    // console.log("onSubmit",data);
+
+
 
     //for create invoice
     if (!invoiceId) {
@@ -213,15 +252,37 @@ useEffect(() => {
   const totalAmount = sub_totalRemoveDiscount + taxAmount;
 
   useEffect(() => {
-  setValue("total", totalAmount);
-}, [totalAmount, setValue]);
+    setValue("total", totalAmount);
+  }, [totalAmount, setValue]);
 
   const totalAmountInCurrencyFormat = new Intl.NumberFormat("en-us", {
     style: "currency",
     currency: currency || watch("currency") || "INR",
   }).format(totalAmount);
 
-  
+
+  const [clients, setClients] = useState<
+    { _id: string; name: string; email: string; address1: string; address2: string; address3: string }[]
+  >([]);
+
+  useEffect(() => {
+    const fetchClients = async () => {
+      try {
+        const res = await fetch("/api/clients");
+        const data = await res.json();
+
+        setClients(data); // response is the array of clients
+      } catch (error) {
+        console.error("Failed to fetch clients:", error);
+      }
+    };
+
+    fetchClients();
+  }, []);
+
+
+
+
 
   return (
     <form
@@ -231,15 +292,15 @@ useEffect(() => {
       <div className="grid grid-cols-2 gap-4 lg:gap-6">
         <div className="grid">
           <div className="flex items-center">
-            <div className="min-w-9 min-h-9 text-center border h-full flex justify-center items-center bg-neutral-100 rounded-l-md ">
+            <div className="min-w-9 min-h-9 text-center border h-full flex justify-center items-center bg-neutral-100 rounded-l-md">
               #
             </div>
             <Input
               type="text"
-              placeholder="Invoice No."
+              value={nextInvoiceNo ?? ""}
               className="rounded-l-none"
-              {...register("invoice_no", { required: true })}
-              disabled={isLoading}
+              disabled
+              readOnly
             />
           </div>
           {errors?.invoice_no && (
@@ -417,14 +478,33 @@ useEffect(() => {
           <div>
             <Input
               type="text"
+              list="client-names"
               placeholder="To name"
-              {...register("to.name", { required: true })}
+              {...register("to.name", {
+                required: true,
+                onChange: (e) => {
+                  const selectedClient = clients.find(c => c.name === e.target.value);
+                  if (selectedClient) {
+                    setValue("to.email", selectedClient.email || "");
+                    setValue("to.address1", selectedClient.address1 || "");
+                    setValue("to.address2", selectedClient.address2 || "");
+                    setValue("to.address3", selectedClient.address3 || "");
+                  }
+                },
+              })}
               disabled={isLoading}
             />
+            <datalist id="client-names">
+              {clients.map((client) => (
+                <option key={client._id} value={client.name} />
+              ))}
+            </datalist>
+
             {errors.to?.name && (
               <p className="text-xs text-red-500">{errors.to.name.message}</p>
             )}
           </div>
+
           <div>
             <Input
               type="text"
@@ -501,8 +581,25 @@ useEffect(() => {
                   <p className="text-xs text-red-500">
                     {errors.items[index]?.item_name.message}
                   </p>
+
                 )}
+                {/* ✅ ADD THIS BELOW item_name Input */}
+                <Textarea
+                  placeholder="Enter description for this item (optional)"
+                  {...register(`items.${index}.item_description`)}
+                  disabled={isLoading}
+                  className="mt-2"
+                />
+
+
+
+
+
               </div>
+
+
+
+
               <div>
                 <Input
                   placeholder="Enter quantity"
@@ -563,9 +660,19 @@ useEffect(() => {
                       <DeleteIcon />
                     </Button>
                   </div>
+
+
+
                 )}
+
+
               </div>
+
             </div>
+
+
+
+
           );
         })}
 
@@ -656,7 +763,7 @@ useEffect(() => {
         <Textarea
           disabled={isLoading}
           placeholder="Enter your notes"
-          {...register("notes") }
+          {...register("notes")}
         />
       </div>
 

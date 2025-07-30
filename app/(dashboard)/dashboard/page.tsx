@@ -103,7 +103,7 @@ export default function DashboardPage() {
         </CardHeader>
         <CardContent>
           <div>
-            <p className="text-lg">{data?.totalRevenue ? `$${data?.totalRevenue}` : "-"}</p>
+            <p className="text-lg">{data?.totalRevenue ? `${data?.totalRevenue}` : "-"}</p>
             <span className="text-muted-foreground text-xs">last 30 days</span>
           </div>
         </CardContent>

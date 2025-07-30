@@ -39,26 +39,28 @@ export default function InvoiceClientPage({ currency, userId }: IInvoiceClientPa
     const router = useRouter();
 
 
-   useEffect(() => {
-    const fetchData = async () => {
-        try {
-            setIsLoading(true);
-            const response = await fetch(`/api/invoice?page=${page}`);
-            const responseData = await response.json();
-            if (response.status === 200) {
-                setdata(responseData.data || []);
-                setTotalPage(responseData.totalPage || 1);
-            } else {
-                toast.error("something went wrong");
+
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                setIsLoading(true);
+                const response = await fetch(`/api/invoice?page=${page}`);
+                const responseData = await response.json();
+                if (response.status === 200) {
+                    setdata(responseData.data || []);
+                    setTotalPage(responseData.totalPage || 1);
+                } else {
+                    toast.error("something went wrong");
+                }
+            } catch (error: unknown) {
+                console.log(error);
+            } finally {
+                setIsLoading(false);
             }
-        } catch (error: unknown) {
-            console.log(error);
-        } finally {
-            setIsLoading(false);
-        }
-    };
-    fetchData();
-}, [page]);
+        };
+        fetchData();
+    }, [page]);
 
     const handleSendEmail = async (invoiceId: string, subject: string) => {
         try {
@@ -69,9 +71,9 @@ export default function InvoiceClientPage({ currency, userId }: IInvoiceClientPa
                     subject: subject
                 })
             })
-            const responsedata= await response.json()
+            const responsedata = await response.json()
 
-            if(response.status === 200){
+            if (response.status === 200) {
                 toast.success(responsedata.message)
 
 
@@ -84,7 +86,7 @@ export default function InvoiceClientPage({ currency, userId }: IInvoiceClientPa
         finally {
             setTimeout(() => {
                 toast.dismiss()
-                
+
             }, 2000);
         }
 
@@ -167,7 +169,7 @@ export default function InvoiceClientPage({ currency, userId }: IInvoiceClientPa
                             <DropdownMenuItem onClick={() => router.push(`/invoice/paid/${invoiceId}`)}>
                                 Paid
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={()=>handleSendEmail(invoiceId as string,`Invoice From ${row.original.from.name}`)}>
+                            <DropdownMenuItem onClick={() => handleSendEmail(invoiceId as string, `Invoice From ${row.original.from.name}`)}>
                                 Send Email
                             </DropdownMenuItem>
                         </DropdownMenuContent>
@@ -184,6 +186,8 @@ export default function InvoiceClientPage({ currency, userId }: IInvoiceClientPa
         <div className="p-4">
             <div className="flex items-center justify-between gap-4 mb-3">
                 <h1 className="text-xl font-semibold">Invoice </h1>
+
+
                 <Link href={"/invoice/create"} className={cn(buttonVariants(), "cursor-pointer")}>
                     Create Invoice
                 </Link>

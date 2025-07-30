@@ -1,43 +1,44 @@
-// Example: import something from 'module-name';
 import mongoose from 'mongoose';
 
-
-interface ISignature{
-    name:string
-    image:string
-    }
-
- export interface ISettings{
-
-    _id?:mongoose.Types.ObjectId
-    invoiceLogo?:string;
-    signature? :ISignature;
-    userId:mongoose.Types.ObjectId;
-    createdAt?:Date;
-    updatedAt?:Date;
-    
-
+interface ISignature {
+  name: string;
+  image: string;
 }
 
-const signatureSchema =new mongoose.Schema<ISignature>({
-    name : { type:String , default:null},
-    image : { type:String , default:null}
-},
-{
-    _id:false
+export interface ISettings {
+  _id?: mongoose.Types.ObjectId;
+  invoiceLogo?: string;
+  signature?: ISignature;
+  phone?: string; // ✅ Add this to the interface
+  userId: mongoose.Types.ObjectId;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
-)
-const settingsSchema = new mongoose.Schema<ISettings>({
+
+const signatureSchema = new mongoose.Schema<ISignature>(
+  {
+    name: { type: String, default: null },
+    image: { type: String, default: null },
+  },
+  {
+    _id: false,
+  }
+);
+
+// ✅ Add `phone` here
+const settingsSchema = new mongoose.Schema<ISettings>(
+  {
     invoiceLogo: { type: String, default: null },
     signature: signatureSchema,
-    userId: { type: mongoose.Schema.ObjectId, ref: "User", required:true},
+    phone: { type: String, default: null }, // ✅ Here
+    userId: { type: mongoose.Schema.ObjectId, ref: 'User', required: true },
+  },
+  {
+    timestamps: true,
+  }
+);
 
-},
-{
-timestamps:true,
-})
-const SettingModel = mongoose.models.setting ||mongoose.model("setting",settingsSchema)
-
-
+// ✅ Model caching for dev environments
+const SettingModel = mongoose.models.setting || mongoose.model('setting', settingsSchema);
 
 export default SettingModel;

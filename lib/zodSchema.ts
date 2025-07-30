@@ -1,51 +1,65 @@
 import z from 'zod';
 
-
 export const onboardingSchema = z.object({
-    firstName: z.string().min(3, { message: "First name is required" }).max(50, { message: "First name must be less than 50 characters" }),
-    lastName: z.string().min(3, { message: "Last name is required" }).max(50, { message: "Last name must be less than 50 characters" }),
-    currency: z.string({ message: "Currency is required" }).optional(),
+  firstName: z.string().min(3, { message: "First name is required" }).max(50, { message: "First name must be less than 50 characters" }),
+  lastName: z.string().min(3, { message: "Last name is required" }).max(50, { message: "Last name must be less than 50 characters" }),
+  currency: z.string({ message: "Currency is required" }),
+
+  // ✅ New field: Phone number (optional)
+  phone: z.string().min(6, { message: "Phone number is too short" }).max(10, { message: "Phone number is too long" }).optional(),
+
+  // ✅ New field: Logo image (optional base64 string)
+  logo: z.string().optional(),
+
+  // ✅ New field: Signature with name and image
+  signature: z.object({
+    name: z.string().optional(),
+    image: z.string().optional(),
+  }).optional(),
 });
 
 
 export const InvoiceSchemaZod = z.object({
+invoice_no: z.string().optional(),
+  invoice_date: z.date({ message: "invoice date is required" }),
+  due_date: z.date({ message: "due date is required" }),
+  currency: z.string().min(1, { message: "currency is required" }).optional(),
 
-    invoice_no: z.string().min(1,{message:"invoice no is required"}),
-    invoice_date: z.date({ message: "invoice date is required" }),
-    due_date: z.date({ message: "due date is required" }),
-    currency: z.string().min(1,{ message: "currency is required" }).optional(),
-    from: z.object({
-        name: z.string().min(3, { message: "name is required" }).max(100, { message: "name is having max hundred character" }),
-        email:z.string().email({message:"email is required"}),
-        address1:z.string().min(5,{message:"Adress is required"}),
-        address2:z.string().optional(),
-        address3:z.string().optional(),
+  from: z.object({
+    name: z.string().min(3, { message: "name is required" }).max(100, { message: "name is having max hundred character" }),
+    email: z.string().email({ message: "email is required" }),
+    address1: z.string().min(5, { message: "Adress is required" }),
+    address2: z.string().optional(),
+    address3: z.string().optional(),
+  }),
 
-    }),
-    to: z.object({
-        name: z.string().min(3, { message: "name is required" }).max(100, { message: "name is having max hundred character" }),
-        email:z.string().email({message:"email is required"}),
-        address1:z.string().min(5,{message:"Adress is required"}),
-        address2:z.string().optional(),
-        address3:z.string().optional(),
-
-    }),
+  to: z.object({
+    name: z.string().min(3, { message: "name is required" }).max(100, { message: "name is having max hundred character" }),
+    email: z.string().email({ message: "email is required" }),
+    address1: z.string().min(5, { message: "Adress is required" }),
+    address2: z.string().optional(),
+    address3: z.string().optional(),
+  }),
 
     items: z.array(z.object({
-        item_name:z.string().min(3,{message:"item name is required"}).max(10,{message:"max character limit reached "}),
-        quantity:z.number().min(0,{message:"Quantity can't be Negative"}),
-        price:z.number().min(0,{message:"Price can't be Negative"}),
-        total:z.number().min(0,{message:"Total can't be Negative"}),
+    item_name: z.string().min(3, { message: "item name is required" }).max(20, { message: "max character limit reached " }),
+    quantity: z.number().min(0, { message: "Quantity can't be Negative" }),
+    item_description: z.string().optional(), // ✨ New field
 
-    })),
-    sub_total: z.number(),
-    discount: z.number(),
+    price: z.number().min(0, { message: "Price can't be Negative" }),
+    total: z.number().min(0, { message: "Total can't be Negative" }),
+  })),
 
-
-    tax_percentage:z.number(),
-    total: z.number(),
-    notes: z.string().optional(),
-   // status: z.enum(["PAID","UNPAID","CANCEL"])
-
-})
-
+  sub_total: z.number(),
+  discount: z.number(),
+  tax_percentage: z.number(),
+  total: z.number(),
+  notes: z.string().optional(),
+});
+export const ClientSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  email: z.string().email("Invalid email"),
+  address1: z.string().min(1, "Address Line 1 is required"),
+  address2: z.string().min(1, "Address Line 2 is required"),
+  address3: z.string().min(1, "Address Line 3 is required"),
+});
