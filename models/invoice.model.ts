@@ -52,6 +52,8 @@ const UserInvoiceSchema = new mongoose.Schema<IUserInvoice>({
 });
 
 const itemSchema = new mongoose.Schema<IItem>({
+    item_description: { type: String, default: null }, // ✅ Add this line
+
     item_name: { type: String, default: null, required: true },
     quantity: { type: Number, required: true },
     price: { type: Number, required: true },

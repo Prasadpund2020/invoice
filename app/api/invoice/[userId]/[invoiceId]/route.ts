@@ -110,6 +110,7 @@ export async function GET(
         Yaxis += 4; // move down for description
         doc.setFontSize(8);
         doc.setTextColor("#555"); // light gray
+        console.log(item.item_description)
         doc.text(`- ${item.item_description.trim()}`, ITEMS_XAXIS, Yaxis);
         Yaxis += 2; // extra spacing before next item
         doc.setTextColor("#000"); // reset

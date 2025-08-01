@@ -1,9 +1,21 @@
+// app/actions/logoutAction.ts
 "use server";
 
-import { signOut } from "@/lib/auth"; // or from "next-auth"
-import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 
 export async function logoutAction() {
-  await signOut(); // Server-side signOut (next-auth v4+ with custom setup)
-  redirect("/admin"); // Redirect after logout
+  const cookieStore = cookies();
+
+  // Expire the admin-auth cookie
+  (await
+    // Expire the admin-auth cookie
+    cookieStore).set("admin-auth", "", {
+    path: "/",
+    maxAge: 0,
+    httpOnly: true,
+    secure: true,
+    sameSite: "strict",
+  });
+
+  // You can omit redirect if you handle it on the client
 }

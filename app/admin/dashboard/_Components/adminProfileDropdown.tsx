@@ -7,9 +7,19 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { signOut } from "next-auth/react"; // 👈 use client version
+import { signOut } from "next-auth/react";
+import { logoutAction } from "@/lib/adminlogout/adminLogout"; // adjust path
 
 export default function AdminProfileDropDown() {
+  const handleLogout = async () => {
+    try {
+      await logoutAction(); // delete admin-auth cookie (server-side)
+      await signOut({ redirect: true, callbackUrl: "/admin/login" }); // then log out from NextAuth
+    } catch (error) {
+      console.error("Logout failed", error);
+    }
+  };
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -26,7 +36,7 @@ export default function AdminProfileDropDown() {
         <DropdownMenuSeparator />
 
         <DropdownMenuItem
-          onClick={() => signOut({ redirect: true, callbackUrl: "/admin" })}
+          onClick={handleLogout}
           className="text-red-500 hover:bg-red-100 font-medium cursor-pointer"
         >
           Logout
