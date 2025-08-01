@@ -1,15 +1,15 @@
 import mongoose, { Schema, Document } from "mongoose";
 
 export interface IClient extends Document {
+  _id: string;
   name: string;
   email: string;
   address1: string;
   address2: string;
   address3: string;
-
-  // Add timestamps fields to the interface
   createdAt: Date;
   updatedAt: Date;
+  user: mongoose.Types.ObjectId; // ✅ Correct type here
 }
 
 const ClientSchema = new Schema<IClient>(
@@ -19,6 +19,7 @@ const ClientSchema = new Schema<IClient>(
     address1: { type: String, required: true },
     address2: { type: String, required: true },
     address3: { type: String, required: true },
+    user: { type: Schema.Types.ObjectId, ref: "User", required: true }, // ✅ No error now
   },
   { timestamps: true }
 );

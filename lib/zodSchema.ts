@@ -4,6 +4,9 @@ export const onboardingSchema = z.object({
   firstName: z.string().min(3, { message: "First name is required" }).max(50, { message: "First name must be less than 50 characters" }),
   lastName: z.string().min(3, { message: "Last name is required" }).max(50, { message: "Last name must be less than 50 characters" }),
   currency: z.string({ message: "Currency is required" }),
+  address1: z.string().min(1, 'Address 1 is required'),
+  address2: z.string().optional(),
+  address3: z.string().optional(),
 
   // ✅ New field: Phone number (optional)
   phone: z.string().min(6, { message: "Phone number is too short" }).max(10, { message: "Phone number is too long" }).optional(),
@@ -20,7 +23,7 @@ export const onboardingSchema = z.object({
 
 
 export const InvoiceSchemaZod = z.object({
-invoice_no: z.string().optional(),
+  invoice_no: z.string().optional(),
   invoice_date: z.date({ message: "invoice date is required" }),
   due_date: z.date({ message: "due date is required" }),
   currency: z.string().min(1, { message: "currency is required" }).optional(),
@@ -41,7 +44,7 @@ invoice_no: z.string().optional(),
     address3: z.string().optional(),
   }),
 
-    items: z.array(z.object({
+  items: z.array(z.object({
     item_name: z.string().min(3, { message: "item name is required" }).max(20, { message: "max character limit reached " }),
     quantity: z.number().min(0, { message: "Quantity can't be Negative" }),
     item_description: z.string().optional(), // ✨ New field

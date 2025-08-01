@@ -22,7 +22,7 @@ export default function ClientPage() {
       const res = await fetch("/api/clients");
       const data = await res.json();
       if (res.ok) {
-        setClients(data || []);  // <-- data is an array directly
+        setClients(data || []);
       } else {
         toast.error("Failed to load clients");
       }
@@ -49,12 +49,48 @@ export default function ClientPage() {
       header: "Added",
       cell: ({ row }) => format(new Date(row.original.createdAt), "PPP"),
     },
+    {
+      // 🔁 CHANGE HERE: Added delete button column
+      header: "Actions",
+      id: "actions",
+      cell: ({ row }) => {
+        const clientId = row.original._id; // Ensure your IClient has _id: string
+        return (
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={async () => {
+              const confirmDelete = confirm("Are you sure you want to delete this client?");
+              if (!confirmDelete) return;
+
+              try {
+                const res = await fetch(`/api/clients/${clientId}`, {
+                  method: "DELETE",
+                });
+
+                if (res.ok) {
+                  toast.success("Client deleted successfully");
+                  setClients((prev) => prev.filter((client) => client._id !== clientId));
+                } else {
+                  const error = await res.json();
+                  toast.error(error.message || "Failed to delete client");
+                }
+              } catch (err) {
+                console.error(err);
+                toast.error("An error occurred");
+              }
+            }}
+          >
+            Delete
+          </Button>
+        );
+      },
+    },
   ];
 
   return (
     <div className="p-4">
       <div className="flex items-center justify-between mb-4">
-        {/* Show back arrow only when form is visible */}
         <div className="flex items-center gap-3">
           {showForm && (
             <button
@@ -73,14 +109,15 @@ export default function ClientPage() {
         </Button>
       </div>
 
-      {/* Center the form and hide table when form is open */}
       {showForm ? (
         <div className="flex justify-center mb-6">
           <div className="w-full max-w-md">
-            <AddClientForm onSuccess={() => {
-              fetchClients();
-              setShowForm(false);  // optionally hide form after successful add
-            }} />
+            <AddClientForm
+              onSuccess={() => {
+                fetchClients();
+                setShowForm(false);
+              }}
+            />
           </div>
         </div>
       ) : isLoading ? (

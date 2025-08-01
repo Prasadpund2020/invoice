@@ -7,7 +7,7 @@ import { connectDB } from '@/lib/connectDB';
 export async function PUT(request: NextRequest) {
   try {
     // ✅ Extract all onboarding fields, including logo, phone, and signature
-    const { firstName, lastName, currency, logo, phone, signature } = await request.json();
+    const { firstName, lastName, currency, logo, phone, signature, } = await request.json();
 
     const session = await auth();
     if (!session) {
@@ -23,7 +23,8 @@ export async function PUT(request: NextRequest) {
       currency,
       logo,             // ✅ new
       phone,            // ✅ new
-      signature         // ✅ new: should be an object like { name, image }
+      signature 
+            // ✅ new: should be an object like { name, image }
     });
 
     return NextResponse.json({ message: 'User updated successfully' });

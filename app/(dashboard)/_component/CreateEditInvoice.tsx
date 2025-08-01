@@ -28,6 +28,9 @@ interface ICreateEditInvoice {
   currency?: string | undefined;
   invoiceId?: string | undefined; //for edit section
   invoiceNumber?: string; // ✅ Added for edit mode
+  address1?: string;
+  address2?: string;
+  address3?: string;
 
 }
 
@@ -36,7 +39,10 @@ export default function CreateEditInvoice({
   lastName,
   email,
   currency,
-  invoiceId, //
+  invoiceId,
+   address1,
+  address2,
+  address3, //
 }: ICreateEditInvoice) {
   const {
     register,
@@ -65,6 +71,9 @@ export default function CreateEditInvoice({
       from: {
         name: `${firstName} ${lastName}`,
         email: email as string,
+        address1: address1 || '',
+        address2: address2 || '',
+        address3: address3 || '',
       },
       tax_percentage: 0,
       currency: currency,
@@ -270,6 +279,7 @@ export default function CreateEditInvoice({
       try {
         const res = await fetch("/api/clients");
         const data = await res.json();
+
 
         setClients(data); // response is the array of clients
       } catch (error) {

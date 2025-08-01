@@ -88,6 +88,8 @@ export const authOptions: NextAuthConfig = {
         token.firstName = user.firstName;
         token.lastName = user.lastName;
         token.currency = user.currency;
+        
+        
       }
       return token;
     },

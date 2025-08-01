@@ -12,22 +12,39 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ message: 'unauthorized access...!!' }, { status: 401 });
     }
 
-    const { logo, signature, phone, firstName, lastName, currency } = await request.json();
+   const {
+  logo,
+  signature,
+  phone,
+  firstName,
+  lastName,
+  currency,
+  streetAddress,
+  city,
+  postalCode
+} = await request.json();
+
+
     await connectDB();
 
     const payload = {
       userId: session.user.id,
       ...(logo && { invoiceLogo: logo }),
       ...(signature && { signature }),
-      ...(phone && { phone }),
+      ...(phone && { phone })
     };
 
-    await UserModel.findByIdAndUpdate(session.user.id, {
-      ...(firstName && { firstName }),
-      ...(lastName && { lastName }),
-      ...(currency && { currency }),
-    });
+    // Update UserModel
+   await UserModel.findByIdAndUpdate(session.user.id, {
+  ...(firstName && { firstName }),
+  ...(lastName && { lastName }),
+  ...(currency && { currency }),
+  ...(streetAddress && { streetAddress }),
+  ...(city && { city }),
+  ...(postalCode && { postalCode })
+});
 
+    // Update or create settings
     const setting = await SettingModel.findOne({ userId: session.user.id });
 
     if (setting) {
@@ -54,9 +71,18 @@ export async function GET() {
 
     await connectDB();
 
-    const settings = await SettingModel.findOne({ userId: session.user.id });
+    // Fetch user with renamed address fields
+    const [user, settings] = await Promise.all([
+      UserModel.findById(session.user.id)
+        .select('firstName lastName currency phone streetAddress city postalCode')
+        .lean(),
+      SettingModel.findOne({ userId: session.user.id }).lean(),
+    ]);
 
-    return NextResponse.json({ data: settings }, { status: 200 });
+    return NextResponse.json(
+      { user, settings },
+      { status: 200 }
+    );
   } catch (error) {
     return NextResponse.json(
       { message: error instanceof Error ? error.message : 'Something went wrong' },

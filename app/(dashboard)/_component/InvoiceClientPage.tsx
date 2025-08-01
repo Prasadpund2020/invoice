@@ -112,9 +112,9 @@ export default function InvoiceClientPage({ currency, userId }: IInvoiceClientPa
         },
         {
             accessorKey: "to.name",
-            header: "client name",
+            header: "Client Name",
             cell: ({ row }) => {
-                return format(row.original.due_date, "PPP")
+                return row.original.to.name;
             }
         },
 

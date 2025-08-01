@@ -2,14 +2,21 @@ import { NextResponse } from "next/server";
 import { ClientSchema as ZodClientSchema } from "@/lib/zodSchema";
 import { connectDB } from "@/lib/connectDB";
 import Client from "@/models/clients";
+import { auth } from "@/lib/auth"; // ✅ import auth to get user session
 
+// GET: Return clients for logged-in user only
 export async function GET() {
   try {
-    await connectDB();
-    // Fetch all clients sorted by creation date descending
-    const clients = await Client.find().sort({ createdAt: -1 });
+    const session = await auth(); // 👈 get user session
+    if (!session?.user?.id) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
 
-    // Return clients array directly (important for frontend to handle correctly)
+    await connectDB();
+
+    // 👇 Only get clients where user === logged-in user
+    const clients = await Client.find({ user: session.user.id }).sort({ createdAt: -1 });
+
     return NextResponse.json(clients);
   } catch (error) {
     console.error("Error fetching clients:", error);
@@ -20,20 +27,27 @@ export async function GET() {
   }
 }
 
+// POST: Add client for the logged-in user
 export async function POST(req: Request) {
   try {
+    const session = await auth(); // 👈 get user session
+    if (!session?.user?.id) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
+
     const body = await req.json();
 
-    // Validate input with Zod schema
+    // Validate input
     const validated = ZodClientSchema.parse(body);
 
-    // Connect to DB
     await connectDB();
 
-    // Create new client document in MongoDB
-    const newClient = await Client.create(validated);
+    // 👇 Attach user ID when creating client
+    const newClient = await Client.create({
+      ...validated,
+      user: session.user.id,
+    });
 
-    // Return success message with new client's ID
     return NextResponse.json(
       { message: "Client added", clientId: newClient._id },
       { status: 200 }
