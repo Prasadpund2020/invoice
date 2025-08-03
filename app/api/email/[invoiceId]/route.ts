@@ -38,7 +38,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       subject,
       InvoiceTemplate({
         firstName : session?.user.firstName,
-        invoiceNo : invoiceData.invoice_no,
+        invoiceNo : String(invoiceData.invoice_no),
         dueDate : format(invoiceData.due_date,"PPP"),
         total : `${currencyOption[invoiceData.currency as TCurrencyKey ]} ${invoiceData.total}`,
         invoiceURL :invoiceURL ,

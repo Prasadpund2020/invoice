@@ -22,6 +22,7 @@ import { Textarea } from "@/components/ui/textarea";
 
 
 interface ICreateEditInvoice {
+  invoice_no?: string; // ✅ Added for edit mode 
   firstName?: string | undefined;
   lastName?: string | undefined;
   email?: string | undefined | null;
@@ -61,7 +62,7 @@ export default function CreateEditInvoice({
         {
           item_name: "",
           item_description: "", // ✨ New field
-
+ 
 
           quantity: 0,
           price: 0,
@@ -306,6 +307,8 @@ export default function CreateEditInvoice({
               #
             </div>
             <Input
+              {...register("invoice_no", { required: true })}
+              placeholder="Invoice No"
               type="text"
               value={nextInvoiceNo ?? ""}
               className="rounded-l-none"
