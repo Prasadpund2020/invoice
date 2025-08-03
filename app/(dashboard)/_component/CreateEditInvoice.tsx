@@ -88,7 +88,6 @@ export default function CreateEditInvoice({
   const router = useRouter();
 
 
-  const [nextInvoiceNo, setNextInvoiceNo] = useState<number | null>(null);
 
   // ✅ Add setValue to the dependencies and call it after fetch
   useEffect(() => {
@@ -96,7 +95,6 @@ export default function CreateEditInvoice({
       const res = await fetch("/api/invoice/next-number");
       const data = await res.json();
 
-      setNextInvoiceNo(data.nextInvoiceNo);
       // ✅ Safe to use setValue here — no need to include in deps
       setValue("invoice_no", data.nextInvoiceNo);
     };
@@ -129,6 +127,7 @@ export default function CreateEditInvoice({
 
         if (response.status === 200 && responseData.data?.length > 0) {
           const invoiceData = responseData.data[0];
+          console.log("invoiceData", invoiceData);
 
           reset({
             ...invoiceData,
@@ -310,7 +309,7 @@ export default function CreateEditInvoice({
               {...register("invoice_no", { required: true })}
               placeholder="Invoice No"
               type="text"
-              value={nextInvoiceNo ?? ""}
+            //  value={nextInvoiceNo ?? ""}
               className="rounded-l-none"
               disabled
               readOnly
