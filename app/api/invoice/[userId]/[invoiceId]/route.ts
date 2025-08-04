@@ -6,6 +6,7 @@ import SettingModel, { ISettings } from '@/models/settings.model';
 import InvoiceModel, { IInvoice } from '@/models/invoice.model';
 import { format } from 'date-fns';
 import CurrencyFormat from '@/lib/CurrencyFormat';
+import { ObjectId } from 'mongodb';
 
 export async function GET(
   request: NextRequest,
@@ -194,23 +195,32 @@ export async function GET(
     });
   }
 }
+
+
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { userId: string; invoiceId: string } }
-) {
+  { params }: { params:Promise< { userId: string; invoiceId: string } >}
+): Promise<NextResponse> {
+  const { invoiceId } = await params;
+
+  if (!ObjectId.isValid(invoiceId)) {
+    return NextResponse.json({ message: 'Invalid invoice ID' }, { status: 400 });
+  }
+
   try {
-    const { invoiceId } = params;
     await connectDB();
+
     const deleted = await InvoiceModel.findByIdAndDelete(invoiceId);
 
     if (!deleted) {
-      return NextResponse.json({ message: "Invoice not found" }, { status: 404 });
+      return NextResponse.json({ message: 'Invoice not found' }, { status: 404 });
     }
 
-    return NextResponse.json({ message: "Invoice deleted successfully" });
+    return NextResponse.json({ message: 'Invoice deleted successfully' }, { status: 200 });
   } catch (error) {
-    console.error(error);
-    return NextResponse.json({ message: "Failed to delete invoice" }, { status: 500 });
+    console.error('Error deleting invoice:', error);
+    return NextResponse.json({ message: 'Failed to delete invoice' }, { status: 500 });
   }
 }
+
 
