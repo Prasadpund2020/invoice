@@ -71,7 +71,7 @@ export default function DashboardSidebar({children}:{children:React.ReactNode}) 
                             <Link href={"/settinggs"}  className ={cn(pathname ==="/settinggs"&& "bg-white")}>
                             <Settings/>
                             <span>
-                                settings
+                                Update  settings
                             </span>
                             </Link>
 

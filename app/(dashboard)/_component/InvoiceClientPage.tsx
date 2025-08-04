@@ -40,6 +40,32 @@ export default function InvoiceClientPage({ currency, userId }: IInvoiceClientPa
 
 
 
+    const handleDeleteInvoice = async (invoiceId: string, userId: string) => {
+        const confirmed = window.confirm("Are you sure you want to delete this invoice?");
+        if (!confirmed) return;
+
+        try {
+            const res = await fetch(`/api/invoice/${userId}/${invoiceId}`, {
+                method: "DELETE",
+            });
+
+            if (!res.ok) {
+                throw new Error("Failed to delete invoice");
+            }
+
+            // Optionally: refresh or update UI after deletion
+            alert("Invoice deleted successfully");
+            router.refresh?.(); // If using Next 13+ App Router
+            // or reload table/list
+        } catch (error) {
+            console.error(error);
+            alert("Error deleting invoice");
+        }
+    };
+
+
+
+
 
     useEffect(() => {
         const fetchData = async () => {
@@ -149,6 +175,8 @@ export default function InvoiceClientPage({ currency, userId }: IInvoiceClientPa
             header: "Action",
             cell: ({ row }) => {
                 const invoiceId = row.original._id?.toString()
+
+
                 return (
 
 
@@ -171,6 +199,12 @@ export default function InvoiceClientPage({ currency, userId }: IInvoiceClientPa
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => handleSendEmail(invoiceId as string, `Invoice From ${row.original.from.name}`)}>
                                 Send Email
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                                onClick={() => handleDeleteInvoice(invoiceId as string, userId as string)}
+                                className="text-red-500"
+                            >
+                                Delete
                             </DropdownMenuItem>
                         </DropdownMenuContent>
 

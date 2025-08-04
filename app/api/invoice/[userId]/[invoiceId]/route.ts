@@ -55,49 +55,69 @@ export async function GET(
 
     doc.setFontSize(9);
     doc.setFont('times', 'normal');
-    doc.text(invoice.from.address1, 15, 40);
-    doc.text(invoice.from.address2 as string, 15, 45);
-    doc.text(invoice.from.address3 as string, 15, 50);
+    let senderY = 40;
 
+    doc.text(invoice.from.address1, 15, senderY);
+    senderY += 5;
+    if (invoice.from.address2) {
+      doc.text(invoice.from.address2, 15, senderY);
+      senderY += 5;
+    }
+    if (invoice.from.address3) {
+      doc.text(invoice.from.address3, 15, senderY);
+      senderY += 5;
+    }
+    
+    // Invoice info on right side
     doc.text(`Invoice No: ${invoice.invoice_no}`, FULL_WIDTH - 15, 35, { align: "right" });
     doc.text(`Invoice Date: ${format(invoice.invoice_date, "PPP")}`, FULL_WIDTH - 15, 40, { align: "right" });
     doc.text(`Due Date: ${format(invoice.due_date, "PPP")}`, FULL_WIDTH - 15, 45, { align: "right" });
 
-    doc.text("Bill To", 15, 60);
+    // Bill To Section
+    senderY += 5;
+    doc.text("Bill To", 15, senderY);
 
     doc.setFontSize(13);
     doc.setFont('times', 'bold');
-    doc.text(invoice.to.name, 15, 70);
+    doc.text(invoice.to.name, 15, senderY + 10);
 
     doc.setFontSize(9);
     doc.setFont('times', 'normal');
-    doc.text(invoice.to.address1, 15, 75);
-    doc.text(invoice.to.address2 as string, 15, 80);
-    doc.text(invoice.to.address3 as string, 15, 85);
+    let receiverY = senderY + 15;
+    doc.text(invoice.to.address1, 15, receiverY);
+    receiverY += 5;
+    if (invoice.to.address2) {
+      doc.text(invoice.to.address2, 15, receiverY);
+      receiverY += 5;
+    }
+    if (invoice.to.address3) {
+      doc.text(invoice.to.address3, 15, receiverY);
+      receiverY += 5;
+    }
 
+    // Table Headers
     const ITEMS_XAXIS = 18;
     const QUANTITY_XAXIS = 110;
     const PRICE_XAXIS = 140;
     const TOTAL_XAXIS = 165;
 
+    const tableStartY = receiverY + 10;
+
     doc.setFontSize(10.5);
     doc.setFillColor(COLOR_CODE);
-    doc.rect(15, 95, FULL_WIDTH - 30, 6, "F");
+    doc.rect(15, tableStartY, FULL_WIDTH - 30, 6, "F");
     doc.setTextColor("#fff");
-    doc.text("Items", ITEMS_XAXIS, 99);
-    doc.text("Quantity", QUANTITY_XAXIS, 99);
-    doc.text("Price", PRICE_XAXIS, 99);
-    doc.text("Total", TOTAL_XAXIS, 99);
+    doc.text("Items", ITEMS_XAXIS, tableStartY + 4);
+    doc.text("Quantity", QUANTITY_XAXIS, tableStartY + 4);
+    doc.text("Price", PRICE_XAXIS, tableStartY + 4);
+    doc.text("Total", TOTAL_XAXIS, tableStartY + 4);
 
-    let Yaxis = 99;
+    let Yaxis = tableStartY + 4;
     doc.setTextColor("000");
     doc.setFontSize(10);
 
-    // ✅ UPDATED: Loop through items and show item_description below name
     invoice.items.forEach((item) => {
       Yaxis += 6;
-
-      // Item row
       doc.setFontSize(10);
       doc.setTextColor("#000");
       doc.text(`${item.item_name}`, ITEMS_XAXIS, Yaxis);
@@ -105,55 +125,52 @@ export async function GET(
       doc.text(`${CurrencyFormat(item.price, invoice.currency)}`, PRICE_XAXIS, Yaxis);
       doc.text(`${CurrencyFormat(item.total, invoice.currency)}`, TOTAL_XAXIS, Yaxis);
 
-      // ✅ Added: show item description if present
       if (item.item_description?.trim()) {
-        Yaxis += 4; // move down for description
+        Yaxis += 4;
         doc.setFontSize(8);
-        doc.setTextColor("#555"); // light gray
-        console.log(item.item_description)
+        doc.setTextColor("#555");
         doc.text(`- ${item.item_description.trim()}`, ITEMS_XAXIS, Yaxis);
-        Yaxis += 2; // extra spacing before next item
-        doc.setTextColor("#000"); // reset
+        Yaxis += 2;
+        doc.setTextColor("#000");
       }
     });
 
     // Totals section
+    const totalsStartY = Yaxis + 10;
     doc.setFontSize(10);
-    doc.text(`Sub Total :`, 160, Yaxis + 15);
-    doc.text(`${invoice.sub_total}`, FULL_WIDTH - 15, Yaxis + 15, { align: "right" });
+    doc.text(`Sub Total :`, 160, totalsStartY);
+    doc.text(`${invoice.sub_total}`, FULL_WIDTH - 15, totalsStartY, { align: "right" });
 
-    doc.text(`Discount :`, 160, Yaxis + 20);
-    doc.text(`-${invoice.discount}`, FULL_WIDTH - 15, Yaxis + 20, { align: "right" });
+    doc.text(`Discount :`, 160, totalsStartY + 5);
+    doc.text(`-${invoice.discount}`, FULL_WIDTH - 15, totalsStartY + 5, { align: "right" });
 
     const subtotal_remove_discount = invoice.sub_total - (invoice.discount || 0);
-    doc.text(`${subtotal_remove_discount}`, FULL_WIDTH - 15, Yaxis + 25, { align: "right" });
+    doc.text(`${subtotal_remove_discount}`, FULL_WIDTH - 15, totalsStartY + 10, { align: "right" });
 
-    // Tax
-    doc.text(`Tax ${invoice.tax_percentage}% :`, 160, Yaxis + 30);
+    doc.text(`Tax ${invoice.tax_percentage}% :`, 160, totalsStartY + 15);
     let taxAmount = 0;
     if (invoice.tax_percentage) {
       taxAmount = (subtotal_remove_discount * Number(invoice.tax_percentage)) / 100;
     }
-    doc.text(`${taxAmount}`, FULL_WIDTH - 15, Yaxis + 30, { align: "right" });
+    doc.text(`${taxAmount}`, FULL_WIDTH - 15, totalsStartY + 15, { align: "right" });
 
-    // Total
     doc.setFont('times', "bold");
     const totalAmount = Number(subtotal_remove_discount) + Number(taxAmount);
-    doc.text(`Total :`, 160, Yaxis + 35);
-    doc.text(`${totalAmount}`, FULL_WIDTH - 15, Yaxis + 35, { align: "right" });
+    doc.text(`Total :`, 160, totalsStartY + 20);
+    doc.text(`${totalAmount}`, FULL_WIDTH - 15, totalsStartY + 20, { align: "right" });
 
     // Signature
     doc.setFont('times', "normal");
     if (settings.signature?.image) {
-      doc.addImage(settings.signature.image as string, FULL_WIDTH - 60, Yaxis + 40, 50, 20);
+      doc.addImage(settings.signature.image as string, FULL_WIDTH - 60, totalsStartY + 25, 50, 20);
     }
-    doc.text(`${settings.signature?.name as string}`, FULL_WIDTH - 15, Yaxis + 60, { align: "right" });
+    doc.text(`${settings.signature?.name as string}`, FULL_WIDTH - 15, totalsStartY + 47, { align: "right" });
 
     // Notes
     doc.setFont('times', "bold");
-    doc.text("Notes : ", 15, Yaxis + 70);
+    doc.text("Notes : ", 15, totalsStartY + 55);
     doc.setFont('times', "normal");
-    doc.text(`${invoice.notes}`, 15, Yaxis + 75);
+    doc.text(`${invoice.notes}`, 15, totalsStartY + 60);
 
     const pdfBuffer = Buffer.from(doc.output('arraybuffer'));
 
@@ -177,3 +194,23 @@ export async function GET(
     });
   }
 }
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: { userId: string; invoiceId: string } }
+) {
+  try {
+    const { invoiceId } = params;
+    await connectDB();
+    const deleted = await InvoiceModel.findByIdAndDelete(invoiceId);
+
+    if (!deleted) {
+      return NextResponse.json({ message: "Invoice not found" }, { status: 404 });
+    }
+
+    return NextResponse.json({ message: "Invoice deleted successfully" });
+  } catch (error) {
+    console.error(error);
+    return NextResponse.json({ message: "Failed to delete invoice" }, { status: 500 });
+  }
+}
+

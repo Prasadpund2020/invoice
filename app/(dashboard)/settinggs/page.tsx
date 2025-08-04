@@ -104,16 +104,16 @@ export default function SettingPage() {
 
     return (
         <div className="p-4">
-            <h1 className="font-semibold text-xl mb-4">Settings</h1>
+            <h1 className="font-semibold text-xl mb-4"> Update Settings</h1>
             <Accordion type="single" className="space-y-4">
 
                 {/* Invoice Logo */}
                 <AccordionItem value="Invoice-Logo">
-                    <AccordionTrigger className="font-semibold text-base cursor-pointer">Invoice Logo</AccordionTrigger>
+                    <AccordionTrigger className="font-semibold text-base cursor-pointer"> Update Invoice Logo</AccordionTrigger>
                     <AccordionContent>
                         <form className="space-y-4 max-w-xs" onSubmit={(e) => handleSubmit(e, { logo })}>
                             <div className="flex flex-col space-y-2">
-                                <label className="text-sm font-medium">Upload Invoice Logo</label>
+                                <label className="text-sm font-medium">Update Invoice Logo</label>
                                 <Input
                                     type="file"
                                     onChange={handleOnChangeLogo}
@@ -142,7 +142,7 @@ export default function SettingPage() {
 
                 {/* Signature */}
                 <AccordionItem value="Signature-invoice">
-                    <AccordionTrigger className="font-semibold text-base cursor-pointer">Invoice Signature</AccordionTrigger>
+                    <AccordionTrigger className="font-semibold text-base cursor-pointer"> Update Invoice Signature</AccordionTrigger>
                     <AccordionContent>
                         <form className="space-y-4 max-w-xs" onSubmit={(e) => handleSubmit(e, { signature: signatureData })}>
                             <div className="flex flex-col space-y-2">
@@ -156,7 +156,7 @@ export default function SettingPage() {
                                 />
                             </div>
                             <div className="flex flex-col space-y-2">
-                                <label className="text-sm font-medium">Upload Signature Image</label>
+                                <label className="text-sm font-medium">Update Signature Image</label>
                                 <Input
                                     type="file"
                                     onChange={handleSignatureImage}
@@ -183,7 +183,7 @@ export default function SettingPage() {
 
                 {/* ✅ Phone Number Section */}
                 <AccordionItem value="Phone-Number">
-                    <AccordionTrigger className="font-semibold text-base cursor-pointer">Phone Number</AccordionTrigger>
+                    <AccordionTrigger className="font-semibold text-base cursor-pointer"> Update Phone Number</AccordionTrigger>
                     <AccordionContent>
                         <form className="space-y-4 max-w-xs" onSubmit={(e) => handleSubmit(e, { phone })}>
                             <div className="flex flex-col space-y-2">

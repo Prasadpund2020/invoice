@@ -45,7 +45,7 @@ export const InvoiceSchemaZod = z.object({
   }),
 
   items: z.array(z.object({
-    item_name: z.string().min(3, { message: "item name is required" }).max(20, { message: "max character limit reached " }),
+    item_name: z.string().min(3, { message: "item name is required" }).max(50, { message: "max character limit reached " }),
     quantity: z.number().min(0, { message: "Quantity can't be Negative" }),
     item_description: z.string().optional(), // ✨ New field
 
