@@ -66,3 +66,11 @@ export const ClientSchema = z.object({
   address2: z.string().min(1, "Address Line 2 is required"),
   address3: z.string().min(1, "Address Line 3 is required"),
 });
+export const UpdateonboardingSchema = z.object({
+  firstName: z.string().min(3, { message: "First name is required" }).max(50, { message: "First name must be less than 50 characters" }),
+  lastName: z.string().min(3, { message: "Last name is required" }).max(50, { message: "Last name must be less than 50 characters" }),
+  currency: z.string({ message: "Currency is required" }),
+  email: z.string().email("Invalid email").optional(),
+})
+
+  
