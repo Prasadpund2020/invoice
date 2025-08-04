@@ -34,7 +34,7 @@ export default function LoginPage() {
     return (
         <Card className="max-w-sm min-w-xs lg:min-w-sm">
             <CardHeader>
-                <CardTitle className="text-xl w-full">Login</CardTitle>
+                <CardTitle className="text-xl w-full"> Organisation Login</CardTitle>
                 <CardDescription>Enter your credentials to access your account</CardDescription>
             </CardHeader>
             <CardContent>
