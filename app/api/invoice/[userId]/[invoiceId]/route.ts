@@ -8,6 +8,7 @@ import { format } from 'date-fns';
 import CurrencyFormat from '@/lib/CurrencyFormat';
 import { ObjectId } from 'mongodb';
 
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ invoiceId: string, userId: string }> }

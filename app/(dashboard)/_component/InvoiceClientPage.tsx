@@ -21,6 +21,8 @@ import { Badge } from "@/components/ui/badge"
 
 
 
+
+
 interface IInvoiceClientPage {
     currency: string | undefined
     userId: string | undefined
@@ -41,27 +43,28 @@ export default function InvoiceClientPage({ currency, userId }: IInvoiceClientPa
 
 
     const handleDeleteInvoice = async (invoiceId: string, userId: string) => {
-        const confirmed = window.confirm("Are you sure you want to delete this invoice?");
-        if (!confirmed) return;
+    const confirmed = window.confirm("Are you sure you want to delete this invoice?");
+    if (!confirmed) return;
 
-        try {
-            const res = await fetch(`/api/invoice/${userId}/${invoiceId}`, {
-                method: "DELETE",
-            });
+    try {
+        const res = await fetch(`/api/invoice/${userId}/${invoiceId}`, {
+            method: "DELETE",
+        });
 
-            if (!res.ok) {
-                throw new Error("Failed to delete invoice");
-            }
-
-            // Optionally: refresh or update UI after deletion
-            alert("Invoice deleted successfully");
-            router.refresh?.(); // If using Next 13+ App Router
-            // or reload table/list
-        } catch (error) {
-            console.error(error);
-            alert("Error deleting invoice");
+        if (!res.ok) {
+            throw new Error("Failed to delete invoice");
         }
-    };
+
+        // Remove the deleted invoice from local state
+setdata(prev => prev.filter(invoice => invoice._id?.toString() !== invoiceId));
+
+        toast.success("Invoice deleted successfully");
+    } catch (error) {
+        console.error(error);
+        toast.error("Error deleting invoice");
+    }
+};
+
 
 
 
