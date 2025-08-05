@@ -41,7 +41,7 @@ export default function CreateEditInvoice({
   email,
   currency,
   invoiceId,
-   address1,
+  address1,
   address2,
   address3, //
 }: ICreateEditInvoice) {
@@ -62,7 +62,7 @@ export default function CreateEditInvoice({
         {
           item_name: "",
           item_description: "", // ✨ New field
- 
+
 
           quantity: 0,
           price: 0,
@@ -86,6 +86,7 @@ export default function CreateEditInvoice({
   });
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const router = useRouter();
+  console.log("currency", currency);
 
 
 
@@ -127,7 +128,7 @@ export default function CreateEditInvoice({
 
         if (response.status === 200 && responseData.data?.length > 0) {
           const invoiceData = responseData.data[0];
-          console.log("invoiceData", invoiceData);
+          console.log("invoiceData in edit", invoiceData.currency);
 
           reset({
             ...invoiceData,
@@ -135,6 +136,7 @@ export default function CreateEditInvoice({
             invoice_date: new Date(invoiceData.invoice_date), // ✅ Convert to Date
             due_date: new Date(invoiceData.due_date),         // ✅ Convert to Date
           });
+       
         }
       } catch (error) {
         console.error("Error fetching invoice data:", error);
@@ -309,7 +311,7 @@ export default function CreateEditInvoice({
               {...register("invoice_no", { required: true })}
               placeholder="Invoice No"
               type="text"
-            //  value={nextInvoiceNo ?? ""}
+              //  value={nextInvoiceNo ?? ""}
               className="rounded-l-none"
               disabled
               readOnly
@@ -711,8 +713,8 @@ export default function CreateEditInvoice({
             />
           </div>
           <div className="grid grid-cols-2">
-            <Label>Discount in $ : </Label>
-            <Input
+            <Label>Discount in {getValues("currency")}</Label>      
+                  <Input
               placeholder="discount"
               type="number"
               {...register("discount", { valueAsNumber: true })}

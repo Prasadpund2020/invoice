@@ -27,7 +27,7 @@ export default function EditInvoicePage(){
             invoiceId={invoiceId as string}
 
             //firstName={session?.user.firstName}
-            //lastName={session?.user.lastName}
+            //lastName={session?.user.lastName} 
             //email={session?.user.email}
             //currency={session?.user.currency}
             

@@ -7,6 +7,12 @@ import InvoiceModel, { IInvoice } from '@/models/invoice.model';
 import { format } from 'date-fns';
 import CurrencyFormat from '@/lib/CurrencyFormat';
 import { ObjectId } from 'mongodb';
+import { toWords } from 'number-to-words';
+import UserModel from "@/models/user.model"; // update the path if needed
+
+
+
+
 
 
 export async function GET(
@@ -19,17 +25,22 @@ export async function GET(
     await connectDB();
     const settings: ISettings | null = await SettingModel.findOne({ userId: userId });
     const invoice: IInvoice | null = await InvoiceModel.findById(invoiceId);
+    const user = await UserModel.findById(userId);
+    if (!user) {
+  return NextResponse.json({ message: "User not found" }, { status: 404 });
+}
+
+const userCurrency = user.currency || 'USD';
+console.log("💰 User's currency:", userCurrency);
+
+
 
     if (!invoice) {
-      return NextResponse.json({
-        messsage: " No invoice found.."
-      }, { status: 500 });
+      return NextResponse.json({ messsage: " No invoice found.." }, { status: 500 });
     }
 
     if (!settings) {
-      return NextResponse.json({
-        messsage: " Please add Logo and signature in setting section."
-      }, { status: 500 });
+      return NextResponse.json({ messsage: " Please add Logo and signature in setting section." }, { status: 500 });
     }
 
     const doc = new jsPDF({
@@ -39,26 +50,70 @@ export async function GET(
     });
 
     const FULL_WIDTH = 211;
-    const COLOR_CODE = "#8c00ff";
+    const COLOR_CODE = "#303030";
+    const PAGE_HEIGHT = 297;
+    const BOTTOM_MARGIN = 20;
+    const MAX_Y = PAGE_HEIGHT - BOTTOM_MARGIN;
+    let Yaxis = 0; // <-- track Y position across pages
 
+    const restoreStyles = () => {
+      doc.setFontSize(10.5);
+      doc.setFont('times', 'normal');
+      doc.setTextColor("#000");
+      doc.setDrawColor(200);
+      doc.setLineWidth(0.1);
+    };
+
+
+    // ✅ Helper to check and trigger new page if needed
+    const checkPageBreak = () => {
+      if (Yaxis >= MAX_Y) {
+        doc.addPage();
+        Yaxis = 20;
+        restoreStyles();
+        renderTableHeader(Yaxis);
+      }
+    };
+
+    // ✅ Table header renderer for repeated headers
+    const renderTableHeader = (startY: number) => {
+      doc.setFontSize(10.5);
+      doc.setFillColor(COLOR_CODE);
+      doc.rect(15, startY, FULL_WIDTH - 30, 6, "F");
+      doc.setTextColor("#fff");
+      doc.text("No.", 18, startY + 4);
+      doc.text("Items", 28, startY + 4);
+      doc.text("Quantity", 110, startY + 4);
+      doc.text("Price", 140, startY + 4);
+      doc.text("Total", 165, startY + 4);
+      doc.setTextColor("#000");
+      Yaxis = startY + 6;
+    };
+
+    // Header bar
     doc.setFillColor(COLOR_CODE);
     doc.rect(0, 0, FULL_WIDTH, 2, "F");
 
+    // Logo and title
+    const logoX = 13;
+    const logoY = 5;
+    const logoWidth = 60;
+    const logoHeight = 30;
     if (settings.invoiceLogo) {
-      doc.addImage(settings.invoiceLogo as string, 15, 13, 50, 15);
+      doc.addImage(settings.invoiceLogo as string, logoX, logoY, logoWidth, logoHeight);
     }
 
     doc.setFontSize(25);
-    doc.text("INVOICE", FULL_WIDTH - 15, 22, { align: "right" });
+    const invoiceTextY = logoY + logoHeight / 2 + 2;
+    doc.text("INVOICE", FULL_WIDTH - 15, invoiceTextY, { align: "right" });
 
-    doc.setFontSize(13);
-    doc.setFont('times', 'bold');
-    doc.text(invoice.from.name, 15, 35);
+    // From section
+    const fromY = logoY + logoHeight + 5;
+    doc.setFontSize(13).setFont('times', 'bold');
+    doc.text(invoice.from.name, 15, fromY);
 
-    doc.setFontSize(9);
-    doc.setFont('times', 'normal');
-    let senderY = 40;
-
+    doc.setFontSize(9).setFont('times', 'normal');
+    let senderY = fromY + 5;
     doc.text(invoice.from.address1, 15, senderY);
     senderY += 5;
     if (invoice.from.address2) {
@@ -69,22 +124,19 @@ export async function GET(
       doc.text(invoice.from.address3, 15, senderY);
       senderY += 5;
     }
-    
-    // Invoice info on right side
+
+    // Invoice metadata
     doc.text(`Invoice No: ${invoice.invoice_no}`, FULL_WIDTH - 15, 35, { align: "right" });
     doc.text(`Invoice Date: ${format(invoice.invoice_date, "PPP")}`, FULL_WIDTH - 15, 40, { align: "right" });
     doc.text(`Due Date: ${format(invoice.due_date, "PPP")}`, FULL_WIDTH - 15, 45, { align: "right" });
 
-    // Bill To Section
+    // Bill To
     senderY += 5;
     doc.text("Bill To", 15, senderY);
-
-    doc.setFontSize(13);
-    doc.setFont('times', 'bold');
+    doc.setFontSize(13).setFont('times', 'bold');
     doc.text(invoice.to.name, 15, senderY + 10);
 
-    doc.setFontSize(9);
-    doc.setFont('times', 'normal');
+    doc.setFontSize(9).setFont('times', 'normal');
     let receiverY = senderY + 15;
     doc.text(invoice.to.address1, 15, receiverY);
     receiverY += 5;
@@ -97,49 +149,49 @@ export async function GET(
       receiverY += 5;
     }
 
-    // Table Headers
-    const ITEMS_XAXIS = 18;
-    const QUANTITY_XAXIS = 110;
-    const PRICE_XAXIS = 140;
-    const TOTAL_XAXIS = 165;
+    // ✅ Render table header before items
+    renderTableHeader(receiverY + 10);
+    console.log("invoice.items", invoice.items);
 
-    const tableStartY = receiverY + 10;
+    // ✅ Render each item with pagination check
+    invoice.items.forEach((item, index) => {
+      
+      Yaxis += 8;
+      checkPageBreak();
 
-    doc.setFontSize(10.5);
-    doc.setFillColor(COLOR_CODE);
-    doc.rect(15, tableStartY, FULL_WIDTH - 30, 6, "F");
-    doc.setTextColor("#fff");
-    doc.text("Items", ITEMS_XAXIS, tableStartY + 4);
-    doc.text("Quantity", QUANTITY_XAXIS, tableStartY + 4);
-    doc.text("Price", PRICE_XAXIS, tableStartY + 4);
-    doc.text("Total", TOTAL_XAXIS, tableStartY + 4);
+      doc.setFontSize(10).setTextColor("#000");
+      doc.text(`${index + 1}`, 18, Yaxis);
+      doc.text(`${item.item_name}`, 28, Yaxis);
+      doc.text(`${item.quantity}`, 110, Yaxis);
+     doc.text(`${CurrencyFormat(item.price, userCurrency, true)}`, 140, Yaxis);
+doc.text(`${CurrencyFormat(item.total, userCurrency, true)}`, 165, Yaxis);
 
-    let Yaxis = tableStartY + 4;
-    doc.setTextColor("000");
-    doc.setFontSize(10);
 
-    invoice.items.forEach((item) => {
-      Yaxis += 6;
-      doc.setFontSize(10);
-      doc.setTextColor("#000");
-      doc.text(`${item.item_name}`, ITEMS_XAXIS, Yaxis);
-      doc.text(`${item.quantity}`, QUANTITY_XAXIS, Yaxis);
-      doc.text(`${CurrencyFormat(item.price, invoice.currency)}`, PRICE_XAXIS, Yaxis);
-      doc.text(`${CurrencyFormat(item.total, invoice.currency)}`, TOTAL_XAXIS, Yaxis);
+
+
 
       if (item.item_description?.trim()) {
         Yaxis += 4;
-        doc.setFontSize(8);
-        doc.setTextColor("#555");
-        doc.text(`- ${item.item_description.trim()}`, ITEMS_XAXIS, Yaxis);
+        checkPageBreak();
+        doc.setFontSize(8).setTextColor("#555");
+        doc.text(`- ${item.item_description.trim()}`, 28, Yaxis);
         Yaxis += 2;
-        doc.setTextColor("#000");
+        checkPageBreak();
       }
+
+      doc.setDrawColor(200);
+      doc.line(15, Yaxis + 2, FULL_WIDTH - 15, Yaxis + 2);
+      Yaxis += 4;
     });
 
-    // Totals section
+    // ✅ Ensure space for totals and signature
+    if (Yaxis + 60 >= MAX_Y) {
+      doc.addPage();
+      Yaxis = 20;
+    }
+
     const totalsStartY = Yaxis + 10;
-    doc.setFontSize(10);
+    doc.setFontSize(10).setFont('times', 'bold').setTextColor('#000');
     doc.text(`Sub Total :`, 160, totalsStartY);
     doc.text(`${invoice.sub_total}`, FULL_WIDTH - 15, totalsStartY, { align: "right" });
 
@@ -158,23 +210,92 @@ export async function GET(
 
     doc.setFont('times', "bold");
     const totalAmount = Number(subtotal_remove_discount) + Number(taxAmount);
-    doc.text(`Total :`, 160, totalsStartY + 20);
-    doc.text(`${totalAmount}`, FULL_WIDTH - 15, totalsStartY + 20, { align: "right" });
+doc.text(`Total :`, 160, totalsStartY + 20);
+doc.text(`${totalAmount}`, FULL_WIDTH - 15, totalsStartY + 20, { align: "right" });
 
-    // Signature
-    doc.setFont('times', "normal");
-    if (settings.signature?.image) {
-      doc.addImage(settings.signature.image as string, FULL_WIDTH - 60, totalsStartY + 25, 50, 20);
+let signatureY = totalsStartY + 30; // Default Y if no words section
+
+// ✅ Show total in words only for INR
+if (userCurrency === "INR") {
+  const amountInWords = toWords(totalAmount);
+  const currencyInWords = `Indian Rupee ${amountInWords.replace(/\b\w/g, c => c.toUpperCase())} Only`;
+
+  doc.setFontSize(9).setFont('times', 'bold').setTextColor("#000");
+  const totalInWordsLines = doc.splitTextToSize(`Total In Words: ${currencyInWords}`, 80);
+  const totalInWordsY = totalsStartY + 27;
+
+  totalInWordsLines.forEach((line: string, i: number) => {
+    doc.text(line, FULL_WIDTH - 15, totalInWordsY + i * 5, { align: "right" });
+  });
+
+  const totalInWordsHeight = totalInWordsLines.length * 5;
+  signatureY = totalInWordsY + totalInWordsHeight + 10; // Update Y only if INR
+}
+
+    // ✅ If signature would overflow, add page
+    if (signatureY + 40 >= MAX_Y) {
+      doc.addPage();
+      signatureY = 20;
     }
-    doc.text(`${settings.signature?.name as string}`, FULL_WIDTH - 15, totalsStartY + 47, { align: "right" });
 
-    // Notes
-    doc.setFont('times', "bold");
-    doc.text("Notes : ", 15, totalsStartY + 55);
+    // ✅ Signature block (right and left)
     doc.setFont('times', "normal");
-    doc.text(`${invoice.notes}`, 15, totalsStartY + 60);
+
+    const signatureImageHeight = 20;
+    const signatureImageY = signatureY;
+
+    // === Signature Image on RIGHT ===
+    if (settings.signature?.image) {
+      doc.setFontSize(10).setFont('times', 'bold').setTextColor('#000');
+
+      doc.addImage(settings.signature.image as string, FULL_WIDTH - 60, signatureImageY, 50, signatureImageHeight);
+    }
+
+   const leftSignatureY = signatureImageY + signatureImageHeight + 6;
+
+// Draw a signature line above the label
+const lineStartX = 15;
+const lineEndX = 70; // adjust line length as needed
+const lineY = leftSignatureY - 6;
+
+doc.setDrawColor(0); // black color
+doc.setLineWidth(0.3);
+doc.line(lineStartX, lineY, lineEndX, lineY);
+
+doc.setFontSize(9).setTextColor("#000").setFont("times", "italic");
+doc.text("Authorized Signature", lineStartX, leftSignatureY);
+
+doc.setFont('times', 'bold');
+doc.text(`${settings.signature?.name || ""}`, lineStartX, leftSignatureY + 5);
+
+
+    // === Notes section below signature text ===
+    let notesY = leftSignatureY + 20;
+
+    if (notesY + 20 >= MAX_Y) {
+      doc.addPage();
+      notesY = 20;
+    }
+
+    doc.setFont('times', "bold");
+    doc.text("Notes : ", 15, notesY);
+
+    doc.setFont('times', "normal");
+    doc.text(`${invoice.notes}`, 15, notesY + 5);
+
+    // === Footer (only on last page) ===
+    const footerLineY = 285;
+    doc.setDrawColor(150).setLineWidth(0.4);
+    doc.line(15, footerLineY, FULL_WIDTH - 15, footerLineY);
+
+    doc.setFontSize(9.5).setTextColor("#333").setFont("times", "normal");
+    doc.text("Crafted with precision by AI Alphatech · www.aialphatech.com", FULL_WIDTH / 2, footerLineY + 7, {
+      align: "center"
+    });
+
 
     const pdfBuffer = Buffer.from(doc.output('arraybuffer'));
+
 
     return new NextResponse(pdfBuffer, {
       headers: {
@@ -182,25 +303,22 @@ export async function GET(
         "content-disposition": "inline"
       }
     });
+
   } catch (error) {
     console.log(error);
-
     let errorMessage = "Something went wrong";
-
     if (error instanceof Error) {
       errorMessage = error.message;
     }
-
-    return NextResponse.json({
-      message: errorMessage
-    });
+    return NextResponse.json({ message: errorMessage });
   }
 }
 
 
+
 export async function DELETE(
   request: NextRequest,
-  { params }: { params:Promise< { userId: string; invoiceId: string } >}
+  { params }: { params: Promise<{ userId: string; invoiceId: string }> }
 ): Promise<NextResponse> {
   const { invoiceId } = await params;
 

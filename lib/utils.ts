@@ -13,7 +13,8 @@ export const currencyOption = {
   EUR: '€',
   GBP: '£',
   JPY: '¥',
-  ZEC: 'ZEC'
+  ZEC: 'ZEC',
+  INR: 'Rs.',
 };
 
 

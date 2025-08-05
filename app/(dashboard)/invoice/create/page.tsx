@@ -9,6 +9,7 @@ import { ArrowLeft } from 'lucide-react';
 export default async function InvoiceCreate() {
   const session = await auth();
   if (!session) return null;
+  console.log("session in invoice", session.user.currency);
 
   await connectDB();
 
