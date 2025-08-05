@@ -1,4 +1,7 @@
+//app/api/invoice/[userId]/[invoiceId]/route.ts
 import { NextResponse } from 'next/server';
+
+
 import { NextRequest } from 'next/server';
 import { connectDB } from "@/lib/connectDB"
 import { jsPDF } from "jspdf";
@@ -24,6 +27,8 @@ export async function GET(
 
     await connectDB();
     const settings: ISettings | null = await SettingModel.findOne({ userId: userId });
+    console.log("✅ Settings fetched:", settings);
+
     const invoice: IInvoice | null = await InvoiceModel.findById(invoiceId);
     const user = await UserModel.findById(userId);
     if (!user) {
@@ -216,6 +221,7 @@ doc.text(`${totalAmount}`, FULL_WIDTH - 15, totalsStartY + 20, { align: "right" 
 let signatureY = totalsStartY + 30; // Default Y if no words section
 
 // ✅ Show total in words only for INR
+// === Total In Words (INR only) ===
 if (userCurrency === "INR") {
   const amountInWords = toWords(totalAmount);
   const currencyInWords = `Indian Rupee ${amountInWords.replace(/\b\w/g, c => c.toUpperCase())} Only`;
@@ -232,69 +238,109 @@ if (userCurrency === "INR") {
   signatureY = totalInWordsY + totalInWordsHeight + 10; // Update Y only if INR
 }
 
-    // ✅ If signature would overflow, add page
-    if (signatureY + 40 >= MAX_Y) {
-      doc.addPage();
-      signatureY = 20;
-    }
+// ✅ If signature would overflow, add page
+if (signatureY + 40 >= MAX_Y) {
+  doc.addPage();
+  signatureY = 20;
+}
 
-    // ✅ Signature block (right and left)
-    doc.setFont('times', "normal");
+// ✅ Signature block
+doc.setFont('times', "normal");
 
-    const signatureImageHeight = 20;
-    const signatureImageY = signatureY;
+const signatureImageHeight = 20;
+const signatureImageY = signatureY;
 
-    // === Signature Image on RIGHT ===
-    if (settings.signature?.image) {
-      doc.setFontSize(10).setFont('times', 'bold').setTextColor('#000');
+// === Signature Image on RIGHT ===
+if (settings.signature?.image) {
+  doc.setFontSize(10).setFont('times', 'bold').setTextColor('#000');
+  doc.addImage(settings.signature.image as string, FULL_WIDTH - 60, signatureImageY, 50, signatureImageHeight);
+}
 
-      doc.addImage(settings.signature.image as string, FULL_WIDTH - 60, signatureImageY, 50, signatureImageHeight);
-    }
-
-   const leftSignatureY = signatureImageY + signatureImageHeight + 6;
+const leftSignatureY = signatureImageY + signatureImageHeight + 6;
 
 // Draw a signature line above the label
 const lineStartX = 15;
-const lineEndX = 70; // adjust line length as needed
+const lineEndX = 70;
 const lineY = leftSignatureY - 6;
 
-doc.setDrawColor(0); // black color
+doc.setDrawColor(0);
 doc.setLineWidth(0.3);
 doc.line(lineStartX, lineY, lineEndX, lineY);
 
 doc.setFontSize(9).setTextColor("#000").setFont("times", "italic");
 doc.text("Authorized Signature", lineStartX, leftSignatureY);
-
 doc.setFont('times', 'bold');
 doc.text(`${settings.signature?.name || ""}`, lineStartX, leftSignatureY + 5);
 
+// ✅ Declare notesY early to avoid usage-before-declaration error
+// === Bank Details (above Notes) ===
 
-    // === Notes section below signature text ===
-    let notesY = leftSignatureY + 20;
+// ✅ Step 1: Start notesY after the signature block
+let notesY = leftSignatureY + 20;
 
-    if (notesY + 20 >= MAX_Y) {
-      doc.addPage();
-      notesY = 20;
-    }
+// ✅ Step 2: Check if any bank field is present
+const hasBankDetails =
+  settings.accountName ||
+  settings.accountNumber ||
+  settings.ifscCode ||
+  settings.panNumber ||
+  settings.upiId;
 
-    doc.setFont('times', "bold");
-    doc.text("Notes : ", 15, notesY);
+if (hasBankDetails) {
+  let bankY = notesY;
+  
+  // ✅ Step 3: If it overflows the page, move to new page
+  if (bankY + 30 >= MAX_Y) {
+    doc.addPage();
+    bankY = 20;
+    notesY = bankY + 55; // push notesY down too
+  }
 
-    doc.setFont('times', "normal");
-    doc.text(`${invoice.notes}`, 15, notesY + 5);
+  let bankLineY = bankY;
 
-    // === Footer (only on last page) ===
-    const footerLineY = 285;
-    doc.setDrawColor(150).setLineWidth(0.4);
-    doc.line(15, footerLineY, FULL_WIDTH - 15, footerLineY);
+  doc.setFont('times', 'bold');
+  doc.text("Bank Details", 15, bankLineY);
+  bankLineY += 6;
 
-    doc.setFontSize(9.5).setTextColor("#333").setFont("times", "normal");
-    doc.text("Crafted with precision by AI Alphatech · www.aialphatech.com", FULL_WIDTH / 2, footerLineY + 7, {
-      align: "center"
-    });
+  doc.setFont('times', 'normal');
+
+  // ✅ Step 4: Render each available field
+if (settings.accountName) doc.text(`Account Name : ${settings.accountName}`, 15, bankLineY += 5);
+if (settings.accountNumber) doc.text(`Account No   : ${settings.accountNumber}`, 15, bankLineY += 5);
+if (settings.ifscCode) doc.text(`IFSC Code    : ${settings.ifscCode}`, 15, bankLineY += 5);
+if (settings.panNumber) doc.text(`PAN          : ${settings.panNumber}`, 15, bankLineY += 5);
+if (settings.upiId) doc.text(`UPI ID       : ${settings.upiId}`, 15, bankLineY += 5);
 
 
-    const pdfBuffer = Buffer.from(doc.output('arraybuffer'));
+  // ✅ Step 5: Update notesY to start after bank details
+  notesY = bankLineY + 10;
+}
+
+
+// === Notes section ===
+if (notesY + 20 >= MAX_Y) {
+  doc.addPage();
+  notesY = 20;
+}
+
+doc.setFont('times', "bold");
+doc.text("Notes : ", 15, notesY);
+
+doc.setFont('times', "normal");
+doc.text(`${invoice.notes}`, 15, notesY + 5);
+
+// === Footer (only on last page) ===
+const footerLineY = 285;
+doc.setDrawColor(150).setLineWidth(0.4);
+doc.line(15, footerLineY, FULL_WIDTH - 15, footerLineY);
+
+doc.setFontSize(9.5).setTextColor("#333").setFont("times", "normal");
+doc.text("Crafted with precision by AI Alphatech · www.aialphatech.com", FULL_WIDTH / 2, footerLineY + 7, {
+  align: "center"
+});
+
+// === Export PDF Buffer ===
+const pdfBuffer = Buffer.from(doc.output('arraybuffer'));
 
 
     return new NextResponse(pdfBuffer, {

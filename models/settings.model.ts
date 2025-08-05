@@ -13,7 +13,13 @@ export interface ISettings {
   address1?: string;
   address2?: string;
   address3?: string;
+   accountName?: string;
+  accountNumber?: string;
+  ifscCode?: string;
+  panNumber?: string;
+  upiId?: string;
   userId: mongoose.Types.ObjectId;
+  
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -36,6 +42,11 @@ const settingsSchema = new mongoose.Schema<ISettings>(
     address1: { type: String, default: null },
     address2: { type: String, default: null },
     address3: { type: String, default: null },
+      accountName: { type: String, default: null },
+    accountNumber: { type: String, default: null },
+    ifscCode: { type: String, default: null },
+    panNumber: { type: String, default: null },
+    upiId: { type: String, default: null },
     userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   },
   {

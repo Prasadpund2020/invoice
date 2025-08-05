@@ -1,62 +1,93 @@
-import { NextResponse } from 'next/server';
-import { NextRequest } from 'next/server';
+import { NextResponse, NextRequest } from 'next/server';
 import { auth } from '@/lib/auth';
 import SettingModel from '@/models/settings.model';
 import UserModel from '@/models/user.model';
 import { connectDB } from '@/lib/connectDB';
+import type { IUser } from '@/models/user.model';
 
 export async function POST(request: NextRequest) {
   try {
     const session = await auth();
+    const body = await request.json();
+    console.log("Received payload:", body);
+
     if (!session) {
-      return NextResponse.json({ message: 'unauthorized access...!!' }, { status: 401 });
+      return NextResponse.json({ message: 'Unauthorized access...!!' }, { status: 401 });
     }
-
-   const {
-  logo,
-  signature,
-  phone,
-  firstName,
-  lastName,
-  currency,
-  streetAddress,
-  city,
-  postalCode
-} = await request.json();
-
 
     await connectDB();
 
-    const payload = {
-      userId: session.user.id,
-      ...(logo && { invoiceLogo: logo }),
-      ...(signature && { signature }),
-      ...(phone && { phone })
+    const {
+      logo,
+      signature,
+      phone,
+      firstName,
+      lastName,
+      currency,
+      streetAddress,
+      city,
+      postalCode,
+      accountName,
+      accountNumber,
+      ifscCode,
+      panNumber,
+      upiId
+    } = body;
+
+    const userId = session.user.id;
+
+    // ✅ Update UserModel
+    const userUpdatePayload: Partial<IUser> = {
+      ...(firstName !== undefined && { firstName }),
+      ...(lastName !== undefined && { lastName }),
+      ...(currency !== undefined && { currency }),
+      ...(streetAddress !== undefined && { streetAddress }),
+      ...(city !== undefined && { city }),
+      ...(postalCode !== undefined && { postalCode }),
+      ...(phone !== undefined && { phone })
     };
 
-    // Update UserModel
-   await UserModel.findByIdAndUpdate(session.user.id, {
-  ...(firstName && { firstName }),
-  ...(lastName && { lastName }),
-  ...(currency && { currency }),
-  ...(streetAddress && { streetAddress }),
-  ...(city && { city }),
-  ...(postalCode && { postalCode })
-});
+    await UserModel.findByIdAndUpdate(userId, userUpdatePayload, { new: true });
 
-    // Update or create settings
-    const setting = await SettingModel.findOne({ userId: session.user.id });
+    // ✅ Get existing settings
+    const existingSettings = await SettingModel.findOne({ userId });
 
-    if (setting) {
-      await SettingModel.findByIdAndUpdate(setting._id, payload);
+    // ✅ Prepare updated settings payload
+    const updatedSettings = {
+      ...(existingSettings?.toObject() || {}),
+      userId,
+      ...(logo !== undefined && { invoiceLogo: logo }),
+      ...(accountName !== undefined && { accountName }),
+      ...(accountNumber !== undefined && { accountNumber }),
+      ...(ifscCode !== undefined && { ifscCode }),
+      ...(panNumber !== undefined && { panNumber }),
+      ...(upiId !== undefined && { upiId }),
+      ...(signature !== undefined && {
+        signature: {
+          ...((existingSettings?.signature || {}) as object),
+          ...signature
+        }
+      })
+    };
+
+    let updatedDoc;
+
+    if (existingSettings) {
+      updatedDoc = await SettingModel.findByIdAndUpdate(
+        existingSettings._id,
+        updatedSettings,
+        { new: true }
+      );
     } else {
-      await SettingModel.create(payload);
+      updatedDoc = await SettingModel.create(updatedSettings);
     }
 
-    return NextResponse.json({ message: 'Setting updated successfully' });
+    console.log("✅ Updated/Created settings:", updatedDoc);
+
+    return NextResponse.json({ message: 'Settings updated successfully' }, { status: 200 });
   } catch (error: unknown) {
     return NextResponse.json(
-      { message: error instanceof Error ? error.message : 'something went wrong' },
+      { message: error instanceof Error ? error.message : 'Something went wrong' },
       { status: 500 }
     );
   }
@@ -71,7 +102,6 @@ export async function GET() {
 
     await connectDB();
 
-    // Fetch user with renamed address fields
     const [user, settings] = await Promise.all([
       UserModel.findById(session.user.id)
         .select('firstName lastName currency phone streetAddress city postalCode')
@@ -83,7 +113,7 @@ export async function GET() {
       { user, settings },
       { status: 200 }
     );
-  } catch (error) {
+  } catch (error: unknown) {
     return NextResponse.json(
       { message: error instanceof Error ? error.message : 'Something went wrong' },
       { status: 500 }

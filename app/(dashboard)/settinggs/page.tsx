@@ -22,6 +22,14 @@ export default function SettingPage() {
     const [isLoading, setIsLoading] = useState(false);
     const [logo, setLogo] = useState<string>();
     const [phone, setPhone] = useState<string>(""); // ✅ new
+    const [bankDetails, setBankDetails] = useState({
+    accountName: "",
+    accountNumber: "",
+    ifscCode: "",
+    panNumber: "",
+    upiId: ""
+});
+
     const [signatureData, setsignatureData] = useState<TSignatureData>({
         name: "",
         image: ""
@@ -34,6 +42,16 @@ export default function SettingPage() {
             [name]: value
         }));
     }
+
+
+
+    const handleBankChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setBankDetails(prev => ({
+        ...prev,
+        [name]: value
+    }));
+};
 
     const handleSignatureImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = e.target.files;
@@ -62,45 +80,78 @@ export default function SettingPage() {
         setLogo(image);
     }
 
-    const fetchData = async () => {
-        try {
-            const response = await fetch('/api/settinggs');
-            const responseData = await response.json();
-            if (response.status === 200) {
-                setLogo(responseData?.data?.invoiceLogo);
-                setsignatureData(responseData?.data?.signature || { name: "", image: "" });
-                setPhone(responseData?.data?.phone || ""); // ✅ fetch phone
-            }
-        } catch (error) {
-            console.log(error);
-        }
+   
+
+const fetchData = async () => {
+  try {
+    const response = await fetch('/api/settinggs');
+    const responseData = await response.json();
+
+    if (response.status === 200) {
+      const settings = responseData?.settings || {};
+
+      setLogo(settings?.invoiceLogo || "");
+      setsignatureData(settings?.signature || { name: "", image: "" });
+      setPhone(responseData?.user?.phone || "");
+
+      // ✅ update all bank details in one go
+      setBankDetails({
+        accountName: settings?.accountName || "",
+        accountNumber: settings?.accountNumber || "",
+        ifscCode: settings?.ifscCode || "",
+        panNumber: settings?.panNumber || "",
+        upiId: settings?.upiId || ""
+      });
+       
+       
+
+      
     }
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+
 
     useEffect(() => {
         fetchData();
     }, []);
 
     const handleSubmit = async (
-        e: React.FormEvent<HTMLFormElement>,
-        data: { logo?: string, signature?: TSignatureData, phone?: string }
-    ) => {
-        e.preventDefault();
-        try {
-            setIsLoading(true);
-            const response = await fetch("/api/settinggs", {
-                method: 'POST',
-                body: JSON.stringify(data)
-            });
-            if (response.status === 200) {
-                toast.success("Settings updated successfully");
-                fetchData();
-            }
-        } catch (error: unknown) {
-            toast.error(error instanceof Error ? error.message : "Something went wrong..");
-        } finally {
-            setIsLoading(false);
+    e: React.FormEvent<HTMLFormElement>,
+    data: {
+        logo?: string;
+        signature?: TSignatureData;
+        phone?: string;
+        accountName?: string;
+        accountNumber?: string;
+        ifscCode?: string;
+        panNumber?: string;
+        upiId?: string;
+    }
+) => {
+    e.preventDefault();
+    try {
+        setIsLoading(true);
+        const response = await fetch("/api/settinggs", {
+            method: "POST",
+            body: JSON.stringify(data),
+        });
+        if (response.status === 200) {
+            toast.success("Settings updated successfully");
+            fetchData();
+        } else {
+            const errorRes = await response.json();
+            toast.error(errorRes.message || "Something went wrong..");
         }
-    };
+    } catch (error: unknown) {
+        toast.error(error instanceof Error ? error.message : "Something went wrong..");
+    } finally {
+        setIsLoading(false);
+    }
+};
+
 
     return (
         <div className="p-4">
@@ -111,7 +162,9 @@ export default function SettingPage() {
                 <AccordionItem value="Invoice-Logo">
                     <AccordionTrigger className="font-semibold text-base cursor-pointer"> Update Invoice Logo</AccordionTrigger>
                     <AccordionContent>
-                        <form className="space-y-4 max-w-xs" onSubmit={(e) => handleSubmit(e, { logo })}>
+                        <form className="space-y-4 max-w-xs" onSubmit={(e) =>   handleSubmit(e, { logo , signature: signatureData,
+    phone,
+    ...bankDetails })}>
                             <div className="flex flex-col space-y-2">
                                 <label className="text-sm font-medium">Update Invoice Logo</label>
                                 <Input
@@ -180,6 +233,37 @@ export default function SettingPage() {
                         </form>
                     </AccordionContent>
                 </AccordionItem>
+                <AccordionItem value="Bank-Details">
+                    <AccordionTrigger className="font-semibold text-base cursor-pointer">
+                        Update Bank Details (Optional)
+                    </AccordionTrigger>
+                    <AccordionContent>
+                        <form className="space-y-4 max-w-xs" onSubmit={(e) => handleSubmit(e, { ...bankDetails })}>
+                            {[
+                                { label: "Account Name", name: "accountName", placeholder: "AI ALPHA TECH" },
+                                { label: "Account Number", name: "accountNumber", placeholder: "9240XXXXXXXXX" },
+                                { label: "IFSC Code", name: "ifscCode", placeholder: "UTIB000XXXX" },
+                                { label: "PAN Number", name: "panNumber", placeholder: "ABCDE1234F" },
+                                { label: "UPI ID", name: "upiId", placeholder: "name@upi" }
+                            ].map(({ label, name, placeholder }) => (
+                                <div key={name} className="flex flex-col space-y-2">
+                                    <label className="text-sm font-medium">{label}</label>
+                                    <Input
+                                        type="text"
+                                        name={name}
+                                        placeholder={placeholder}
+                                        value={bankDetails[name as keyof typeof bankDetails]}
+                                        onChange={handleBankChange}
+                                    />
+                                </div>
+                            ))}
+                            <Button className="w-full" disabled={isLoading}>
+                                {isLoading ? "Saving..." : "Save"}
+                            </Button>
+                        </form>
+                    </AccordionContent>
+                </AccordionItem>
+
 
                 {/* ✅ Phone Number Section */}
                 <AccordionItem value="Phone-Number">
