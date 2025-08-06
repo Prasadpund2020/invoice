@@ -27,6 +27,7 @@ export const InvoiceSchemaZod = z.object({
   invoice_date: z.date({ message: "invoice date is required" }),
   due_date: z.date({ message: "due date is required" }),
   currency: z.string().min(1, { message: "currency is required" }).optional(),
+  showBankDetails: z.boolean().optional(), // ✅ ADD THIS
 
   from: z.object({
     name: z.string().min(3, { message: "name is required" }).max(100, { message: "name is having max hundred character" }),

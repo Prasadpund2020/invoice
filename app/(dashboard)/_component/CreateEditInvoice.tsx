@@ -14,7 +14,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
 import { CalendarIcon, DeleteIcon } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useFieldArray, useForm } from "react-hook-form";
+import { Controller, useFieldArray, useForm } from "react-hook-form";
 import { z } from "zod";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
@@ -58,6 +58,7 @@ export default function CreateEditInvoice({
     resolver: zodResolver(InvoiceSchemaZod),
     defaultValues: {
       invoice_no: '',
+      showBankDetails: false, // ✅ Default value for showBankDetails
       items: [
         {
           item_name: "",
@@ -88,7 +89,7 @@ export default function CreateEditInvoice({
   const router = useRouter();
   console.log("currency", currency);
 
-
+    const [showBankDetails, setShowBankDetails] = useState(false);
 
   // ✅ Add setValue to the dependencies and call it after fetch
   useEffect(() => {
@@ -116,6 +117,8 @@ export default function CreateEditInvoice({
 
 
 
+
+
   //edit component
   // 👇 REMOVE fetchData from here, MOVE IT INSIDE useEffect as you asked.
   useEffect(() => {
@@ -123,13 +126,16 @@ export default function CreateEditInvoice({
       try {
         setIsLoading(true);
 
-        const response = await fetch(`/api/invoice?invoiceId=${invoiceId}`);
+
+        const response = await fetch(`/api/invoice?invoiceId=${invoiceId}&includeBankDetails=${showBankDetails}`);
+
+        
         const responseData = await response.json();
 
         if (response.status === 200 && responseData.data?.length > 0) {
           const invoiceData = responseData.data[0];
           console.log("invoiceData in edit", invoiceData.currency);
-
+          
           reset({
             ...invoiceData,
             invoice_no: String(invoiceData.invoice_no ?? ''),
@@ -148,7 +154,7 @@ export default function CreateEditInvoice({
     if (invoiceId) {
       fetchData();
     }
-  }, [invoiceId, reset]);
+  }, [invoiceId,showBankDetails, reset]);
 
 
 
@@ -184,6 +190,9 @@ export default function CreateEditInvoice({
   }, [items, setValue]);
 
 
+ 
+
+
   //add new item row
   const
     handleAddNewItemRow = (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -207,14 +216,18 @@ export default function CreateEditInvoice({
 
 
   const onSubmit = async (data: z.infer<typeof InvoiceSchemaZod>) => {
-    // console.log("onSubmit",data);
-
+    console.log("onSubmit", data);
+     const payload = {
+    ...data,
+    showBankDetails, // ✅ <-- Include this in payload
+  };
+  console.log("Payload to send:", payload);
 
 
     //for create invoice
     if (!invoiceId) {
       setIsLoading(true);
-      const response = await fetch("/api/invoice", {
+      const response = await fetch('/api/invoice', {
         method: "post",
         body: JSON.stringify(data),
       });
@@ -233,11 +246,12 @@ export default function CreateEditInvoice({
     //for edit invoice
     try {
       setIsLoading(true);
-      const response = await fetch("/api/invoice", {
+      const response = await fetch(`/api/invoice`, {
         method: "put",
         body: JSON.stringify({
           invoiceId,
           ...data,
+           ...payload,
         }),
       });
       await response.json();
@@ -698,6 +712,33 @@ export default function CreateEditInvoice({
         >
           Add Item
         </Button>
+    <div className="flex items-center gap-2 mt-4">
+  <Controller
+  name="showBankDetails"
+  control={control}
+  render={({ field }) => (
+    <div>
+      <input
+        type="checkbox"
+        id="toggle-bank-details"
+        checked={field.value || false} // ✅ Correctly bind the boolean value
+        onChange={(e) => {
+          const checked = e.target.checked;
+          field.onChange(checked);       // ✅ Send boolean to RHF
+          setShowBankDetails(checked);   // ✅ (Optional) Local state
+        }}
+        onBlur={field.onBlur}
+        name={field.name}
+        ref={field.ref}
+      />
+      <label htmlFor="toggle-bank-details">
+        Include bank details in PDF
+      </label>
+    </div>
+  )}
+/>
+</div>
+
       </div>
 
       {/**sub total , discount, tax, total */}

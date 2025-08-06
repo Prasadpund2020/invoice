@@ -15,6 +15,13 @@ import UserModel from "@/models/user.model"; // update the path if needed
 
 
 
+async function getBase64ImageFromUrl(url: string): Promise<string> {
+  const response = await fetch(url);
+  const arrayBuffer = await response.arrayBuffer();
+  const base64 = Buffer.from(arrayBuffer).toString("base64");
+  const contentType = response.headers.get("content-type") || "image/png";
+  return `data:${contentType};base64,${base64}`;
+}
 
 
 
@@ -26,17 +33,43 @@ export async function GET(
     const { userId, invoiceId } = await params;
 
     await connectDB();
+
+
+
+
     const settings: ISettings | null = await SettingModel.findOne({ userId: userId });
-    console.log("✅ Settings fetched:", settings);
+    console.log("Invoice Logo URL:", settings?.invoiceLogo);
+console.log("Signature Image URL:", settings?.signature?.image);
+    let logoBase64: string | null = null;
+    let signatureBase64: string | null = null;
+
+    if (settings?.invoiceLogo) {
+      logoBase64 = await getBase64ImageFromUrl(settings.invoiceLogo);
+    }
+
+    if (settings?.signature?.image) {
+      signatureBase64 = await getBase64ImageFromUrl(settings.signature.image);
+    }
+console.log("Logo base64:", logoBase64?.slice(0, 100));
+console.log("Signature base64:", signatureBase64?.slice(0, 100));
+
+
 
     const invoice: IInvoice | null = await InvoiceModel.findById(invoiceId);
+    const { searchParams } = new URL(request.url);
+    const includeBankDetails = searchParams.get("includeBankDetails") === "true";
+    console.log("includeBankDetails toggle:", includeBankDetails);
+
+
     const user = await UserModel.findById(userId);
     if (!user) {
-  return NextResponse.json({ message: "User not found" }, { status: 404 });
-}
+      return NextResponse.json({ message: "User not found" }, { status: 404 });
+    }
 
-const userCurrency = user.currency || 'USD';
-console.log("💰 User's currency:", userCurrency);
+    const userCurrency = user.currency || 'USD';
+    console.log("💰 User's currency:", userCurrency);
+
+    console.log("invoice data in pdf:", invoice);
 
 
 
@@ -55,7 +88,7 @@ console.log("💰 User's currency:", userCurrency);
     });
 
     const FULL_WIDTH = 211;
-    const COLOR_CODE = "#303030";
+    const COLOR_CODE = settings.primaryColor || "#303030";
     const PAGE_HEIGHT = 297;
     const BOTTOM_MARGIN = 20;
     const MAX_Y = PAGE_HEIGHT - BOTTOM_MARGIN;
@@ -104,9 +137,10 @@ console.log("💰 User's currency:", userCurrency);
     const logoY = 5;
     const logoWidth = 60;
     const logoHeight = 30;
-    if (settings.invoiceLogo) {
-      doc.addImage(settings.invoiceLogo as string, logoX, logoY, logoWidth, logoHeight);
+    if (logoBase64) {
+      doc.addImage(logoBase64, logoX, logoY, logoWidth, logoHeight);
     }
+
 
     doc.setFontSize(25);
     const invoiceTextY = logoY + logoHeight / 2 + 2;
@@ -160,7 +194,7 @@ console.log("💰 User's currency:", userCurrency);
 
     // ✅ Render each item with pagination check
     invoice.items.forEach((item, index) => {
-      
+
       Yaxis += 8;
       checkPageBreak();
 
@@ -168,8 +202,8 @@ console.log("💰 User's currency:", userCurrency);
       doc.text(`${index + 1}`, 18, Yaxis);
       doc.text(`${item.item_name}`, 28, Yaxis);
       doc.text(`${item.quantity}`, 110, Yaxis);
-     doc.text(`${CurrencyFormat(item.price, userCurrency, true)}`, 140, Yaxis);
-doc.text(`${CurrencyFormat(item.total, userCurrency, true)}`, 165, Yaxis);
+      doc.text(`${item.price}`, 140, Yaxis);
+      doc.text(`${item.total}`, 165, Yaxis);
 
 
 
@@ -215,132 +249,141 @@ doc.text(`${CurrencyFormat(item.total, userCurrency, true)}`, 165, Yaxis);
 
     doc.setFont('times', "bold");
     const totalAmount = Number(subtotal_remove_discount) + Number(taxAmount);
-doc.text(`Total :`, 160, totalsStartY + 20);
-doc.text(`${totalAmount}`, FULL_WIDTH - 15, totalsStartY + 20, { align: "right" });
+    doc.text(`Total :`, 160, totalsStartY + 20);
+    doc.text(`${CurrencyFormat(totalAmount, userCurrency, true)}`, FULL_WIDTH - 15, totalsStartY + 20, { align: "right" });
 
-let signatureY = totalsStartY + 30; // Default Y if no words section
 
-// ✅ Show total in words only for INR
-// === Total In Words (INR only) ===
-if (userCurrency === "INR") {
-  const amountInWords = toWords(totalAmount);
-  const currencyInWords = `Indian Rupee ${amountInWords.replace(/\b\w/g, c => c.toUpperCase())} Only`;
+    let signatureY = totalsStartY + 30; // Default Y if no words section
 
-  doc.setFontSize(9).setFont('times', 'bold').setTextColor("#000");
-  const totalInWordsLines = doc.splitTextToSize(`Total In Words: ${currencyInWords}`, 80);
-  const totalInWordsY = totalsStartY + 27;
+    // ✅ Show total in words only for INR
+    // === Total In Words (INR only) ===
+    if (userCurrency === "INR") {
+      const amountInWords = toWords(totalAmount);
+      const currencyInWords = `Indian Rupee ${amountInWords.replace(/\b\w/g, c => c.toUpperCase())} Only`;
 
-  totalInWordsLines.forEach((line: string, i: number) => {
-    doc.text(line, FULL_WIDTH - 15, totalInWordsY + i * 5, { align: "right" });
-  });
+      doc.setFontSize(9).setFont('times', 'bold').setTextColor("#000");
+      const totalInWordsLines = doc.splitTextToSize(`Total In Words: ${currencyInWords}`, 80);
+      const totalInWordsY = totalsStartY + 27;
 
-  const totalInWordsHeight = totalInWordsLines.length * 5;
-  signatureY = totalInWordsY + totalInWordsHeight + 10; // Update Y only if INR
-}
+      totalInWordsLines.forEach((line: string, i: number) => {
+        doc.text(line, FULL_WIDTH - 15, totalInWordsY + i * 5, { align: "right" });
+      });
 
-// ✅ If signature would overflow, add page
-if (signatureY + 40 >= MAX_Y) {
-  doc.addPage();
-  signatureY = 20;
-}
+      const totalInWordsHeight = totalInWordsLines.length * 5;
+      signatureY = totalInWordsY + totalInWordsHeight + 10; // Update Y only if INR
+    }
 
-// ✅ Signature block
-doc.setFont('times', "normal");
+    // ✅ If signature would overflow, add page
+    if (signatureY + 40 >= MAX_Y) {
+      doc.addPage();
+      signatureY = 20;
+    }
 
-const signatureImageHeight = 20;
-const signatureImageY = signatureY;
+    // ✅ Signature block
+    doc.setFont('times', "normal");
 
-// === Signature Image on RIGHT ===
-if (settings.signature?.image) {
+    const signatureImageHeight = 20;
+    const signatureImageY = signatureY;
+
+    // === Signature Image on RIGHT ===
+    if (signatureBase64) {
   doc.setFontSize(10).setFont('times', 'bold').setTextColor('#000');
-  doc.addImage(settings.signature.image as string, FULL_WIDTH - 60, signatureImageY, 50, signatureImageHeight);
+  doc.addImage(signatureBase64, FULL_WIDTH - 60, signatureImageY, 50, signatureImageHeight);
 }
 
-const leftSignatureY = signatureImageY + signatureImageHeight + 6;
+    const leftSignatureY = signatureImageY + signatureImageHeight + 6;
 
-// Draw a signature line above the label
-const lineStartX = 15;
-const lineEndX = 70;
-const lineY = leftSignatureY - 6;
+    // Draw a signature line above the label
+    const lineStartX = 15;
+    const lineEndX = 70;
+    const lineY = leftSignatureY - 6;
 
-doc.setDrawColor(0);
-doc.setLineWidth(0.3);
-doc.line(lineStartX, lineY, lineEndX, lineY);
+    doc.setDrawColor(0);
+    doc.setLineWidth(0.3);
+    doc.line(lineStartX, lineY, lineEndX, lineY);
 
-doc.setFontSize(9).setTextColor("#000").setFont("times", "italic");
-doc.text("Authorized Signature", lineStartX, leftSignatureY);
-doc.setFont('times', 'bold');
-doc.text(`${settings.signature?.name || ""}`, lineStartX, leftSignatureY + 5);
+    doc.setFontSize(9).setTextColor("#000").setFont("times", "italic");
+    doc.text("Authorized Signature", lineStartX, leftSignatureY);
+    doc.setFont('times', 'bold');
+    doc.text(`${settings.signature?.name || ""}`, lineStartX, leftSignatureY + 5);
 
-// ✅ Declare notesY early to avoid usage-before-declaration error
-// === Bank Details (above Notes) ===
+    // ✅ Declare notesY early to avoid usage-before-declaration error
+    // === Bank Details (above Notes) ===
 
-// ✅ Step 1: Start notesY after the signature block
-let notesY = leftSignatureY + 20;
+    // ✅ Step 1: Start notesY after the signature block
+    let notesY = leftSignatureY + 20;
 
-// ✅ Step 2: Check if any bank field is present
-const hasBankDetails =
-  settings.accountName ||
-  settings.accountNumber ||
-  settings.ifscCode ||
-  settings.panNumber ||
-  settings.upiId;
+    // ✅ Step 2: Check if any bank field is present
+    const hasBankDetails =
+      settings.accountName ||
+      settings.accountNumber ||
+      settings.ifscCode ||
+      settings.panNumber ||
+      settings.upiId;
 
-if (hasBankDetails) {
-  let bankY = notesY;
-  
-  // ✅ Step 3: If it overflows the page, move to new page
-  if (bankY + 30 >= MAX_Y) {
-    doc.addPage();
-    bankY = 20;
-    notesY = bankY + 55; // push notesY down too
-  }
+    console.log("hasBankDetails:", hasBankDetails);
 
-  let bankLineY = bankY;
+    if (hasBankDetails) {
+      console.log('invoice.showBankDetails:', invoice.showBankDetails);
+      let bankY = notesY;
 
-  doc.setFont('times', 'bold');
-  doc.text("Bank Details", 15, bankLineY);
-  bankLineY += 6;
+      // ✅ Step 3: If it overflows the page, move to new page
+      if (bankY + 30 >= MAX_Y) {
+        doc.addPage();
+        bankY = 20;
+        notesY = bankY + 55; // push notesY down too
+      }
 
-  doc.setFont('times', 'normal');
-
-  // ✅ Step 4: Render each available field
-if (settings.accountName) doc.text(`Account Name : ${settings.accountName}`, 15, bankLineY += 5);
-if (settings.accountNumber) doc.text(`Account No   : ${settings.accountNumber}`, 15, bankLineY += 5);
-if (settings.ifscCode) doc.text(`IFSC Code    : ${settings.ifscCode}`, 15, bankLineY += 5);
-if (settings.panNumber) doc.text(`PAN          : ${settings.panNumber}`, 15, bankLineY += 5);
-if (settings.upiId) doc.text(`UPI ID       : ${settings.upiId}`, 15, bankLineY += 5);
+      let bankLineY = bankY;
 
 
-  // ✅ Step 5: Update notesY to start after bank details
-  notesY = bankLineY + 10;
-}
+      if (invoice.showBankDetails && hasBankDetails) {
+        console.log("Rendering bank details...");
+
+        doc.setFont('times', 'bold');
+        doc.text("Bank Details", 15, bankLineY);
+        bankLineY += 6;
+
+        doc.setFont('times', 'normal');
+
+        // ✅ Step 4: Render each available field
+        if (settings.accountName) doc.text(`Account Name : ${settings.accountName}`, 15, bankLineY += 5);
+        if (settings.accountNumber) doc.text(`Account No   : ${settings.accountNumber}`, 15, bankLineY += 5);
+        if (settings.ifscCode) doc.text(`IFSC Code    : ${settings.ifscCode}`, 15, bankLineY += 5);
+        if (settings.panNumber) doc.text(`PAN          : ${settings.panNumber}`, 15, bankLineY += 5);
+        if (settings.upiId) doc.text(`UPI ID       : ${settings.upiId}`, 15, bankLineY += 5);
+      }
 
 
-// === Notes section ===
-if (notesY + 20 >= MAX_Y) {
-  doc.addPage();
-  notesY = 20;
-}
+      // ✅ Step 5: Update notesY to start after bank details
+      notesY = bankLineY + 10;
+    }
 
-doc.setFont('times', "bold");
-doc.text("Notes : ", 15, notesY);
 
-doc.setFont('times', "normal");
-doc.text(`${invoice.notes}`, 15, notesY + 5);
+    // === Notes section ===
+    if (notesY + 20 >= MAX_Y) {
+      doc.addPage();
+      notesY = 20;
+    }
 
-// === Footer (only on last page) ===
-const footerLineY = 285;
-doc.setDrawColor(150).setLineWidth(0.4);
-doc.line(15, footerLineY, FULL_WIDTH - 15, footerLineY);
+    doc.setFont('times', "bold");
+    doc.text("Notes : ", 15, notesY);
 
-doc.setFontSize(9.5).setTextColor("#333").setFont("times", "normal");
-doc.text("Crafted with precision by AI Alphatech · www.aialphatech.com", FULL_WIDTH / 2, footerLineY + 7, {
-  align: "center"
-});
+    doc.setFont('times', "normal");
+    doc.text(`${invoice.notes}`, 15, notesY + 5);
 
-// === Export PDF Buffer ===
-const pdfBuffer = Buffer.from(doc.output('arraybuffer'));
+    // === Footer (only on last page) ===
+    const footerLineY = 285;
+    doc.setDrawColor(150).setLineWidth(0.4);
+    doc.line(15, footerLineY, FULL_WIDTH - 15, footerLineY);
+
+    doc.setFontSize(9.5).setTextColor("#333").setFont("times", "normal");
+    doc.text("Crafted with precision by AI Alphatech · www.aialphatech.com", FULL_WIDTH / 2, footerLineY + 7, {
+      align: "center"
+    });
+
+    // === Export PDF Buffer ===
+    const pdfBuffer = Buffer.from(doc.output('arraybuffer'));
 
 
     return new NextResponse(pdfBuffer, {

@@ -10,8 +10,9 @@ import { Input } from "@/components/ui/input"
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button"
-import imagebase64 from "@/lib/imagebase64"
 import toast from 'react-hot-toast';
+import { uploadToCloudinary } from '@/lib/cloudinaryUpload'; // ← adjust path
+
 
 type TSignatureData = {
     name: string,
@@ -23,12 +24,15 @@ export default function SettingPage() {
     const [logo, setLogo] = useState<string>();
     const [phone, setPhone] = useState<string>(""); // ✅ new
     const [bankDetails, setBankDetails] = useState({
-    accountName: "",
-    accountNumber: "",
-    ifscCode: "",
-    panNumber: "",
-    upiId: ""
-});
+        accountName: "",
+        accountNumber: "",
+        ifscCode: "",
+        panNumber: "",
+        upiId: ""
+    });
+
+
+    const [invoiceColor, setInvoiceColor] = useState<string>("#303030"); // default color
 
     const [signatureData, setsignatureData] = useState<TSignatureData>({
         name: "",
@@ -46,27 +50,35 @@ export default function SettingPage() {
 
 
     const handleBankChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setBankDetails(prev => ({
-        ...prev,
-        [name]: value
-    }));
-};
+        const { name, value } = e.target;
+        setBankDetails(prev => ({
+            ...prev,
+            [name]: value
+        }));
+    };
 
     const handleSignatureImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const files = e.target.files;
-        if (!files || files.length <= 0) return;
-        const file = files[0];
-        if (!["image/png", "image/jpeg"].includes(file.type)) {
-            alert("Please upload a PNG or JPEG file.");
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        if (!['image/png', 'image/jpeg'].includes(file.type)) {
+            alert('Please upload a PNG or JPEG file.');
             return;
         }
-        const image = await imagebase64(file);
-        setsignatureData(prev => ({
-            ...prev,
-            image: image
-        }));
-    }
+
+        try {
+            const cloudinaryUrl = await uploadToCloudinary(file);
+
+            setsignatureData((prev) => ({
+                ...prev,
+                image: cloudinaryUrl,
+            }));
+        } catch (error) {
+            console.error("Upload failed:", error);
+            alert("Failed to upload signature image.");
+        }
+    };
+
 
     const handleOnChangeLogo = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = e.target.files;
@@ -76,41 +88,65 @@ export default function SettingPage() {
             alert("Please upload a PNG or JPEG file.");
             return;
         }
-        const image = await imagebase64(file);
-        setLogo(image);
-    }
 
-   
+        const formData = new FormData();
+        formData.append('file', file);
 
-const fetchData = async () => {
-  try {
-    const response = await fetch('/api/settinggs');
-    const responseData = await response.json();
+        try {
+            const response = await fetch('/api/upload', {
+                method: 'POST',
+                body: formData,
+            });
 
-    if (response.status === 200) {
-      const settings = responseData?.settings || {};
+            const data = await response.json();
 
-      setLogo(settings?.invoiceLogo || "");
-      setsignatureData(settings?.signature || { name: "", image: "" });
-      setPhone(responseData?.user?.phone || "");
+            if (response.ok) {
+                setLogo(data.url); // ✅ Cloudinary URL
+            } else {
+                alert(data.error || 'Upload failed');
+            }
+        } catch (error) {
+            alert("Upload error");
+            console.error(error);
+        }
+    };
 
-      // ✅ update all bank details in one go
-      setBankDetails({
-        accountName: settings?.accountName || "",
-        accountNumber: settings?.accountNumber || "",
-        ifscCode: settings?.ifscCode || "",
-        panNumber: settings?.panNumber || "",
-        upiId: settings?.upiId || ""
-      });
-       
-       
 
-      
-    }
-  } catch (error) {
-    console.log(error);
-  }
-};
+
+    const fetchData = async () => {
+        try {
+            const response = await fetch('/api/settinggs');
+            const responseData = await response.json();
+            console.log("Fetched settings:", responseData); // 👈 ADD THIS
+
+
+
+            if (response.status === 200) {
+                const settings = responseData?.settings || {};
+                setInvoiceColor(settings?.primaryColor || "#303030");
+
+
+                setLogo(settings?.invoiceLogo || "");
+                setsignatureData(settings?.signature || { name: "", image: "" });
+                setPhone(responseData?.user?.phone || "");
+
+                // ✅ update all bank details in one go
+                setBankDetails({
+                    accountName: settings?.accountName || "",
+                    accountNumber: settings?.accountNumber || "",
+                    ifscCode: settings?.ifscCode || "",
+                    panNumber: settings?.panNumber || "",
+                    upiId: settings?.upiId || ""
+                });
+
+
+
+
+            }
+        } catch (error) {
+            console.log(error);
+        }
+    };
 
 
 
@@ -119,38 +155,41 @@ const fetchData = async () => {
     }, []);
 
     const handleSubmit = async (
-    e: React.FormEvent<HTMLFormElement>,
-    data: {
-        logo?: string;
-        signature?: TSignatureData;
-        phone?: string;
-        accountName?: string;
-        accountNumber?: string;
-        ifscCode?: string;
-        panNumber?: string;
-        upiId?: string;
-    }
-) => {
-    e.preventDefault();
-    try {
-        setIsLoading(true);
-        const response = await fetch("/api/settinggs", {
-            method: "POST",
-            body: JSON.stringify(data),
-        });
-        if (response.status === 200) {
-            toast.success("Settings updated successfully");
-            fetchData();
-        } else {
-            const errorRes = await response.json();
-            toast.error(errorRes.message || "Something went wrong..");
+        e: React.FormEvent<HTMLFormElement>,
+        data: {
+            logo?: string;
+            signature?: TSignatureData;
+            phone?: string;
+            accountName?: string;
+            accountNumber?: string;
+            ifscCode?: string;
+            panNumber?: string;
+            upiId?: string;
+            primaryColor?: string; // ✅ ADD THIS
+
+
         }
-    } catch (error: unknown) {
-        toast.error(error instanceof Error ? error.message : "Something went wrong..");
-    } finally {
-        setIsLoading(false);
-    }
-};
+    ) => {
+        e.preventDefault();
+        try {
+            setIsLoading(true);
+            const response = await fetch("/api/settinggs", {
+                method: "POST",
+                body: JSON.stringify(data),
+            });
+            if (response.status === 200) {
+                toast.success("Settings updated successfully");
+                fetchData();
+            } else {
+                const errorRes = await response.json();
+                toast.error(errorRes.message || "Something went wrong..");
+            }
+        } catch (error: unknown) {
+            toast.error(error instanceof Error ? error.message : "Something went wrong..");
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
 
     return (
@@ -162,9 +201,11 @@ const fetchData = async () => {
                 <AccordionItem value="Invoice-Logo">
                     <AccordionTrigger className="font-semibold text-base cursor-pointer"> Update Invoice Logo</AccordionTrigger>
                     <AccordionContent>
-                        <form className="space-y-4 max-w-xs" onSubmit={(e) =>   handleSubmit(e, { logo , signature: signatureData,
-    phone,
-    ...bankDetails })}>
+                        <form className="space-y-4 max-w-xs" onSubmit={(e) => handleSubmit(e, {
+                            logo, signature: signatureData, primaryColor: invoiceColor,
+                            phone,
+                            ...bankDetails
+                        })}>
                             <div className="flex flex-col space-y-2">
                                 <label className="text-sm font-medium">Update Invoice Logo</label>
                                 <Input
@@ -223,7 +264,7 @@ const fetchData = async () => {
                                         src={signatureData.image}
                                         width={250}
                                         height={96}
-                                        alt={signatureData.name || "Signature preview"}
+                                        alt="Signature preview"
                                     />
                                 ) : (
                                     <p className="text-center text-muted-foreground">No Signature</p>
@@ -263,6 +304,33 @@ const fetchData = async () => {
                         </form>
                     </AccordionContent>
                 </AccordionItem>
+
+                {/* ✅ Invoice Color Section */}
+                <AccordionItem value="Invoice-Color">
+                    <AccordionTrigger className="font-semibold text-base cursor-pointer">
+                        Select Invoice Theme Color
+                    </AccordionTrigger>
+                    <AccordionContent>
+                        <form
+                            className="space-y-4 max-w-xs"
+                            onSubmit={(e) => handleSubmit(e, { primaryColor: invoiceColor })}
+                        >
+                            <div className="flex flex-col space-y-2">
+                                <label className="text-sm font-medium">Select Primary Color</label>
+                                <input
+                                    type="color"
+                                    value={invoiceColor}
+                                    onChange={(e) => setInvoiceColor(e.target.value)}
+                                    className="w-20 h-10 border border-gray-300 rounded cursor-pointer"
+                                />
+                            </div>
+                            <Button className="w-full" disabled={isLoading}>
+                                {isLoading ? "Saving..." : "Save"}
+                            </Button>
+                        </form>
+                    </AccordionContent>
+                </AccordionItem>
+
 
 
                 {/* ✅ Phone Number Section */}

@@ -22,7 +22,6 @@ import { onboardingSchema } from '@/lib/zodSchema';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import imagebase64 from '@/lib/imagebase64';
 import { Input } from '@/components/ui/input';
 import Image from 'next/image';
 
@@ -52,34 +51,72 @@ export default function OnboardingPage() {
   const router = useRouter();
 
   const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const file = e.target.files?.[0];
+  if (!file) return;
 
-    if (!['image/png', 'image/jpeg'].includes(file.type)) {
-      alert('Please upload a PNG or JPEG file.');
-      return;
+  if (!['image/png', 'image/jpeg'].includes(file.type)) {
+    alert('Please upload a PNG or JPEG file.');
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append('file', file);
+
+  try {
+    const response = await fetch('/api/upload', {
+      method: 'POST',
+      body: formData,
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+      setValue('logo', data.url); // ✅ Store Cloudinary URL
+      setLogoPreview(data.url);
+    } else {
+      alert(data.error || 'Logo upload failed.');
     }
+  } catch (error) {
+    console.error('Upload error:', error);
+    alert('Logo upload error.');
+  }
+};
 
-    const base64 = await imagebase64(file);
-    setValue('logo', base64);
-    setLogoPreview(base64);
-  };
 
   const handleSignatureImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const file = e.target.files?.[0];
+  if (!file) return;
 
-    if (!['image/png', 'image/jpeg'].includes(file.type)) {
-      alert('Please upload a PNG or JPEG file.');
-      return;
+  if (!['image/png', 'image/jpeg'].includes(file.type)) {
+    alert('Please upload a PNG or JPEG file.');
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append('file', file);
+
+  try {
+    const response = await fetch('/api/upload', {
+      method: 'POST',
+      body: formData,
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+      setSignatureData((prev) => ({
+        ...prev,
+        image: data.url, // ✅ Cloudinary URL
+      }));
+    } else {
+      alert(data.error || 'Signature upload failed.');
     }
+  } catch (error) {
+    console.error('Signature upload error:', error);
+    alert('Signature upload error.');
+  }
+};
 
-    const base64 = await imagebase64(file);
-    setSignatureData((prev) => ({
-      ...prev,
-      image: base64,
-    }));
-  };
 
   const onChangeSignature = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;

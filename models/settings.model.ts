@@ -18,7 +18,11 @@ export interface ISettings {
   ifscCode?: string;
   panNumber?: string;
   upiId?: string;
+  primaryColor: string, // ✅ New field (primitive string)
+
+
   userId: mongoose.Types.ObjectId;
+  
   
   createdAt?: Date;
   updatedAt?: Date;
@@ -48,6 +52,9 @@ const settingsSchema = new mongoose.Schema<ISettings>(
     panNumber: { type: String, default: null },
     upiId: { type: String, default: null },
     userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    primaryColor: { type: String, default: "#303030" },
+
+
   },
   {
     timestamps: true,

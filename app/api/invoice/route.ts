@@ -1,3 +1,4 @@
+//app/api/invoice/route.ts
 import { NextResponse } from 'next/server';
 import { NextRequest } from 'next/server';
 import InvoiceModel from "@/models/invoice.model"
@@ -24,9 +25,10 @@ export async function POST(request: NextRequest) {
             due_date, currency,
             from, to, items,
             sub_total, discount,
-            tax_percentage, total, notes
+            tax_percentage, total, notes,
+            showBankDetails, // ✅ ADD THIS
         } = await request.json()
-
+ 
         await connectDB();
 
         // Inside your POST API:
@@ -43,17 +45,22 @@ export async function POST(request: NextRequest) {
             sub_total, discount,
             tax_percentage, total,
             notes,
+            showBankDetails, // ✅ ADD THIS
+
             status: "PAID",
             userId: session.user.id,
         };
 
 
+        // ✅ Create invoice with the payload
+        console.log("Creating invoice with payload:", payload);
         const data = await InvoiceModel.create(payload)
-
+        console.log("Invoice created successfully:", data);
         return NextResponse.json({ message: "invoice created succesfully", data: data })
 
     } catch (error: unknown) {
         let message = "Something went wrong";
+
 
         if (error instanceof Error) {
             message = error.message;
@@ -94,6 +101,8 @@ export async function GET(request: NextRequest) {
         const query = {
             ...(invoiceId && { _id: invoiceId }),
             userId: session.user.id
+            
+
         }
 
 
@@ -147,6 +156,7 @@ export async function PUT(request: NextRequest) {
             due_date, currency,
             from, to, items,
             sub_total, discount,
+            showBankDetails,
             tax_percentage, total, notes, status, invoiceId
         } = await request.json()
 
@@ -157,6 +167,7 @@ export async function PUT(request: NextRequest) {
             due_date, currency,
             from, to, items,
             sub_total, discount,
+            showBankDetails,
             tax_percentage, total, notes, status
         }
 

@@ -8,14 +8,14 @@ import type { IUser } from '@/models/user.model';
 export async function POST(request: NextRequest) {
   try {
     const session = await auth();
-    const body = await request.json();
-    console.log("Received payload:", body);
-
     if (!session) {
-      return NextResponse.json({ message: 'Unauthorized access...!!' }, { status: 401 });
+      return NextResponse.json({ message: 'Unauthorized access' }, { status: 401 });
     }
 
     await connectDB();
+
+    const body = await request.json();
+    console.log("Settings API received:", body);
 
     const {
       logo,
@@ -31,60 +31,53 @@ export async function POST(request: NextRequest) {
       accountNumber,
       ifscCode,
       panNumber,
-      upiId
+      upiId,
+      primaryColor
     } = body;
 
     const userId = session.user.id;
 
-    // ✅ Update UserModel
+    // ✅ Update user personal info
     const userUpdatePayload: Partial<IUser> = {
-      ...(firstName !== undefined && { firstName }),
-      ...(lastName !== undefined && { lastName }),
-      ...(currency !== undefined && { currency }),
-      ...(streetAddress !== undefined && { streetAddress }),
-      ...(city !== undefined && { city }),
-      ...(postalCode !== undefined && { postalCode }),
-      ...(phone !== undefined && { phone })
+      ...(firstName && { firstName }),
+      ...(lastName && { lastName }),
+      ...(currency && { currency }),
+      ...(streetAddress && { streetAddress }),
+      ...(city && { city }),
+      ...(postalCode && { postalCode }),
+      ...(phone && { phone }),
     };
-
     await UserModel.findByIdAndUpdate(userId, userUpdatePayload, { new: true });
 
-    // ✅ Get existing settings
+    // ✅ Find existing settings
     const existingSettings = await SettingModel.findOne({ userId });
 
-    // ✅ Prepare updated settings payload
+    // ✅ Prepare updated settings
     const updatedSettings = {
-      ...(existingSettings?.toObject() || {}),
       userId,
-      ...(logo !== undefined && { invoiceLogo: logo }),
-      ...(accountName !== undefined && { accountName }),
-      ...(accountNumber !== undefined && { accountNumber }),
-      ...(ifscCode !== undefined && { ifscCode }),
-      ...(panNumber !== undefined && { panNumber }),
-      ...(upiId !== undefined && { upiId }),
-      ...(signature !== undefined && {
+      ...(logo && { invoiceLogo: logo }),
+      ...(accountName && { accountName }),
+      ...(accountNumber && { accountNumber }),
+      ...(ifscCode && { ifscCode }),
+      ...(panNumber && { panNumber }),
+      ...(upiId && { upiId }),
+      ...(primaryColor && { primaryColor }),
+      ...(signature && {
         signature: {
           ...((existingSettings?.signature || {}) as object),
           ...signature
         }
-      })
+      }),
     };
 
     let updatedDoc;
-
     if (existingSettings) {
-      updatedDoc = await SettingModel.findByIdAndUpdate(
-        existingSettings._id,
-        updatedSettings,
-        { new: true }
-      );
+      updatedDoc = await SettingModel.findByIdAndUpdate(existingSettings._id, updatedSettings, { new: true });
     } else {
       updatedDoc = await SettingModel.create(updatedSettings);
     }
 
-    console.log("✅ Updated/Created settings:", updatedDoc);
-
-    return NextResponse.json({ message: 'Settings updated successfully' }, { status: 200 });
+    return NextResponse.json({ message: 'Settings updated successfully', settings: updatedDoc }, { status: 200 });
   } catch (error: unknown) {
     return NextResponse.json(
       { message: error instanceof Error ? error.message : 'Something went wrong' },
@@ -109,10 +102,7 @@ export async function GET() {
       SettingModel.findOne({ userId: session.user.id }).lean(),
     ]);
 
-    return NextResponse.json(
-      { user, settings },
-      { status: 200 }
-    );
+    return NextResponse.json({ user, settings }, { status: 200 });
   } catch (error: unknown) {
     return NextResponse.json(
       { message: error instanceof Error ? error.message : 'Something went wrong' },

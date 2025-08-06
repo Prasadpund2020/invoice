@@ -7,6 +7,7 @@ interface IUserInvoice {
     address2?: string;
     address3?: string;
 }
+
 interface IItem {
     item_description: string;
     item_name: string;
@@ -17,7 +18,7 @@ interface IItem {
 
 export interface IInvoice {
     _id?: mongoose.Types.ObjectId;
-    invoice_no: number; // ✅ CHANGED: was string, now number for sorting
+    invoice_no: number;
     invoice_date: Date;
     due_date: Date;
     currency: string;
@@ -30,6 +31,7 @@ export interface IInvoice {
     total: number;
     notes?: string | null;
     status: string;
+    showBankDetails?: boolean; // ✅ NEW: Added to control PDF display
     created_at?: Date;
     updated_at?: Date;
     userId: mongoose.Types.ObjectId;
@@ -52,8 +54,7 @@ const UserInvoiceSchema = new mongoose.Schema<IUserInvoice>({
 });
 
 const itemSchema = new mongoose.Schema<IItem>({
-    item_description: { type: String, default: null }, // ✅ Add this line
-
+    item_description: { type: String, default: null },
     item_name: { type: String, default: null, required: true },
     quantity: { type: Number, required: true },
     price: { type: Number, required: true },
@@ -63,7 +64,7 @@ const itemSchema = new mongoose.Schema<IItem>({
 });
 
 const InvoiceSchema = new mongoose.Schema<IInvoice>({
-    invoice_no: { type: Number, required: true }, // ✅ CHANGED: was String, now Number
+    invoice_no: { type: Number, required: true },
     invoice_date: { type: Date, required: true },
     due_date: { type: Date, required: true },
     currency: { type: String, required: true },
@@ -76,12 +77,13 @@ const InvoiceSchema = new mongoose.Schema<IInvoice>({
     total: { type: Number, default: 0, required: true },
     notes: { type: String, default: null },
     status: { type: String, enum: Status },
+    showBankDetails: { type: Boolean, required:true}, // ✅ NEW: Add this
     userId: { type: mongoose.Schema.ObjectId, ref: "user", required: true }
 }, {
     timestamps: true
 });
 
-// ✅ ADDED: Ensure unique invoice_no per user
+// ✅ Ensure unique invoice_no per user
 InvoiceSchema.index({ userId: 1, invoice_no: 1 }, { unique: true });
 
 const InvoiceModel = mongoose.models.invoice || mongoose.model('invoice', InvoiceSchema);
