@@ -1,36 +1,124 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🧾 Invoice Generator
 
-## Getting Started
+A professional and customizable invoice generator built with **Next.js 15**, supporting personalized logos, signatures, color themes, and custom bank details. Designed for simplicity and performance, it allows users to create, customize,edit  and manage invoices — all from the browser, without a custom Node.js server.
 
-First, run the development server:
+🔗 **Live Demo:** [https://invoice-six-orcin.vercel.app/](https://invoice-six-orcin.vercel.app/)  
+📂 **GitHub Repo:** [github.com/Prasadpund2020/invoice](https://github.com/Prasadpund2020/invoice)
+
+---
+
+## 📸 Screenshots
+
+<!-- Add your screenshots here -->
+![Invoice Preview](./assets/Screenshot111.png)
+
+---
+
+## ✨ Features
+
+- 🧾 Generate clean, professional invoices
+- 🏦 Input custom bank/payment details
+- 🖼️ Upload your logo and signature (Cloudinary support)
+- 🎨 Choose custom invoice colors
+- 💾 Save and manage invoices in MongoDB
+- 🔐 User authentication with NextAuth
+- ☁️ Cloud-based asset storage via Cloudinary
+- 🌍 Deployed on Vercel
+
+---
+
+## 🛠 Tech Stack
+
+- [Next.js 15](https://nextjs.org/)
+- [MongoDB Atlas](https://www.mongodb.com/cloud/atlas)
+- [NextAuth.js](https://next-auth.js.org/)
+- [Cloudinary](https://cloudinary.com/)
+- [Vercel](https://vercel.com/)
+
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- Node.js >= 18
+- npm or yarn
+
+### Installation
+
+```bash
+git clone https://github.com/Prasadpund2020/invoice.git
+cd invoice
+npm install
+```
+
+### Development
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Visit [http://localhost:3000](http://localhost:3000) in your browser.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 🔐 Environment Variables
 
-## Learn More
+Create a `.env.local` file in the root of the project and add the following variables:
 
-To learn more about Next.js, take a look at the following resources:
+```env
+NEXTAUTH_SECRET=
+MONGODB_URI=
+AUTH_RESEND_KEY=
+CLOUDINARY_CLOUD_NAME=
+CLOUDINARY_API_KEY=
+CLOUDINARY_API_SECRET=
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 🚢 Deployment
 
-## Deploy on Vercel
+This project is deployed with **Vercel**.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+To deploy your own copy:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. Push the code to your GitHub
+2. Connect the repo to [Vercel](https://vercel.com/)
+3. Set the required environment variables
+4. Deploy
+
+---
+
+## 📁 Folder Structure
+
+```bash
+/app
+/assets
+/components 
+/hooks 
+/lib
+/models 
+/public
+/scripts
+
+```
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome!  
+Feel free to open issues, suggest improvements, or submit pull requests.
+
+---
+
+
+## 🙏 Acknowledgements
+
+- [Next.js Documentation](https://nextjs.org/docs)
+- [NextAuth.js](https://next-auth.js.org/)
+- [MongoDB Atlas](https://www.mongodb.com/cloud/atlas)
+- [Cloudinary](https://cloudinary.com/documentation)
+- [Vercel](https://vercel.com/)
+
+---

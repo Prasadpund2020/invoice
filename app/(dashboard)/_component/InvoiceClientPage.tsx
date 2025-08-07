@@ -43,27 +43,27 @@ export default function InvoiceClientPage({ currency, userId }: IInvoiceClientPa
 
 
     const handleDeleteInvoice = async (invoiceId: string, userId: string) => {
-    const confirmed = window.confirm("Are you sure you want to delete this invoice?");
-    if (!confirmed) return;
+        const confirmed = window.confirm("Are you sure you want to delete this invoice?");
+        if (!confirmed) return;
 
-    try {
-        const res = await fetch(`/api/invoice/${userId}/${invoiceId}`, {
-            method: "DELETE",
-        });
+        try {
+            const res = await fetch(`/api/invoice/${userId}/${invoiceId}`, {
+                method: "DELETE",
+            });
 
-        if (!res.ok) {
-            throw new Error("Failed to delete invoice");
+            if (!res.ok) {
+                throw new Error("Failed to delete invoice");
+            }
+
+            // Remove the deleted invoice from local state
+            setdata(prev => prev.filter(invoice => invoice._id?.toString() !== invoiceId));
+
+            toast.success("Invoice deleted successfully");
+        } catch (error) {
+            console.error(error);
+            toast.error("Error deleting invoice");
         }
-
-        // Remove the deleted invoice from local state
-setdata(prev => prev.filter(invoice => invoice._id?.toString() !== invoiceId));
-
-        toast.success("Invoice deleted successfully");
-    } catch (error) {
-        console.error(error);
-        toast.error("Error deleting invoice");
-    }
-};
+    };
 
 
 
@@ -126,6 +126,14 @@ setdata(prev => prev.filter(invoice => invoice._id?.toString() !== invoiceId));
             accessorKey: "invoice_no",
             header: "Invoice No",
         },
+         {
+            accessorKey: "to.name",
+            header: "Client Name",
+            cell: ({ row }) => {
+                return row.original.to.name;
+            }
+        },
+
         {
             accessorKey: "invoice_date",
             header: "date",
@@ -139,14 +147,7 @@ setdata(prev => prev.filter(invoice => invoice._id?.toString() !== invoiceId));
                 return format(row.original.due_date, "PPP")
             }
         },
-        {
-            accessorKey: "to.name",
-            header: "Client Name",
-            cell: ({ row }) => {
-                return row.original.to.name;
-            }
-        },
-
+       
 
 
 
@@ -164,15 +165,25 @@ setdata(prev => prev.filter(invoice => invoice._id?.toString() !== invoiceId));
 
 
         {
-            accessorKey: "status",
-            header: "status",
-            cell: ({ row }) => {
-                return <Badge>
-                    {row.original.status}
-                </Badge>
-            }
+  accessorKey: "status",
+  header: "Status",
+  cell: ({ row }) => {
+    const status = row.original.status;
 
-        },
+    const statusStyles =
+      status === "PAID"
+        ? "bg-green-100 text-green-700"
+        : status === "PENDING"
+        ? "bg-red-100 text-red-700"
+        : status === "CANCEL"
+        ? "bg-gray-200 text-gray-700"
+        : "bg-muted text-muted-foreground";
+
+    return <Badge className={statusStyles}>{status}</Badge>;
+  }
+}
+
+        ,
         {
             accessorKey: "_id",
             header: "Action",

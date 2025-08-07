@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
             notes,
             showBankDetails, // ✅ ADD THIS
 
-            status: "PAID",
+            status: "PENDING",
             userId: session.user.id,
         };
 

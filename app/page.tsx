@@ -50,10 +50,10 @@ export default function Home() {
         <p className="font-semibold text-base sm:text-lg text-center">
           Made by{" "}
           <Link
-            href={"https://www.linkedin.com/in/prasad-pund/"}
+            href={"https://www.linkedin.com/company/aialphatechno/"}
             className="italic hover:underline cursor-pointer text-blue-500"
           >
-            Prasad Pund
+            AI ALPHA-TECh
           </Link>
         </p>
       </footer>

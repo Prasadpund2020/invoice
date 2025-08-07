@@ -42,31 +42,36 @@ useEffect(() => {
   fetchData();
 }, [fetchData]);
 
-  const handleUpdate = async()=>{
-    try {
-        setIsLoading(true)
-        const response = await fetch('/api/invoice',{
-            method : 'put',
-            body : JSON.stringify({
-                invoiceId,
-                ...data,
-                status : "PAID"
-            })
-        })
-         await response.json()
+ const handleUpdate = async () => {
+  try {
+    setIsLoading(true);
 
-        if(response.status === 200){
-            fetchData();
-            toast.success("Invoice status updated")
-        }else{
-            toast.error("Something went wrong")
-        }
-    } catch (error) {
-        console.log(error)
-    }finally{
-         setIsLoading(false)
+    const response = await fetch('/api/invoice', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json' // ✅ Required
+      },
+      body: JSON.stringify({
+        invoiceId,
+        status: "PAID"
+      })
+    });
+
+    await response.json();
+
+    if (response.status === 200) {
+      fetchData();
+      toast.success("Invoice status updated");
+    } else {
+      toast.error("Something went wrong");
     }
+  } catch (error) {
+    console.log(error);
+  } finally {
+    setIsLoading(false);
   }
+};
+
 
   return (
     <div className="p-4">
@@ -88,7 +93,7 @@ useEffect(() => {
           <CardContent className="py-4">
             {isLoading ? (
               <Loading />
-            ) : data?.status === "UNPAID" ? (
+            ) : data?.status === "PENDING" ? (
               <Button className="w-full" onClick={handleUpdate}>Make Invoice Paid</Button>
             ) : (
               <div
