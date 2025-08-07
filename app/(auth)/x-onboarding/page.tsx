@@ -1,29 +1,15 @@
 "use client";
 
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from '@/components/ui/card';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { currencyOption } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
-import { useForm } from 'react-hook-form';
-import { z } from 'zod';
-import { onboardingSchema } from '@/lib/zodSchema';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { Input } from '@/components/ui/input';
-import Image from 'next/image';
+import "@/app/styles/SignUp_LogIn_Form.css";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { onboardingSchema } from "@/lib/zodSchema";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { currencyOption } from "@/lib/utils";
+import Image from "next/image";
+
 
 export default function OnboardingPage() {
   const {
@@ -34,318 +20,225 @@ export default function OnboardingPage() {
   } = useForm<z.infer<typeof onboardingSchema>>({
     resolver: zodResolver(onboardingSchema),
     defaultValues: {
-      currency: 'USD',
-      address1: '',
-      address2: '',
-      address3: '',
+      currency: "USD",
+      address1: "",
+      address2: "",
+      address3: "",
     },
   });
 
   const [isLoading, setIsLoading] = useState(false);
   const [logoPreview, setLogoPreview] = useState<string>();
-  const [signatureData, setSignatureData] = useState({
-    name: '',
-    image: '',
-  });
-
+  const [signatureData, setSignatureData] = useState({ name: "", image: "" });
   const router = useRouter();
 
   const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-  const file = e.target.files?.[0];
-  if (!file) return;
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-  if (!['image/png', 'image/jpeg'].includes(file.type)) {
-    alert('Please upload a PNG or JPEG file.');
-    return;
-  }
-
-  const formData = new FormData();
-  formData.append('file', file);
-
-  try {
-    const response = await fetch('/api/upload', {
-      method: 'POST',
-      body: formData,
-    });
-
-    const data = await response.json();
-
-    if (response.ok) {
-      setValue('logo', data.url); // ✅ Store Cloudinary URL
-      setLogoPreview(data.url);
-    } else {
-      alert(data.error || 'Logo upload failed.');
+    if (!["image/png", "image/jpeg"].includes(file.type)) {
+      alert("Please upload a PNG or JPEG file.");
+      return;
     }
-  } catch (error) {
-    console.error('Upload error:', error);
-    alert('Logo upload error.');
-  }
-};
 
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const response = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setValue("logo", data.url);
+        setLogoPreview(data.url);
+      } else {
+        alert(data.error || "Logo upload failed.");
+      }
+    } catch (error) {
+      console.error("Upload error:", error);
+      alert("Logo upload error.");
+    }
+  };
 
   const handleSignatureImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
-  const file = e.target.files?.[0];
-  if (!file) return;
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-  if (!['image/png', 'image/jpeg'].includes(file.type)) {
-    alert('Please upload a PNG or JPEG file.');
-    return;
-  }
-
-  const formData = new FormData();
-  formData.append('file', file);
-
-  try {
-    const response = await fetch('/api/upload', {
-      method: 'POST',
-      body: formData,
-    });
-
-    const data = await response.json();
-
-    if (response.ok) {
-      setSignatureData((prev) => ({
-        ...prev,
-        image: data.url, // ✅ Cloudinary URL
-      }));
-    } else {
-      alert(data.error || 'Signature upload failed.');
+    if (!["image/png", "image/jpeg"].includes(file.type)) {
+      alert("Please upload a PNG or JPEG file.");
+      return;
     }
-  } catch (error) {
-    console.error('Signature upload error:', error);
-    alert('Signature upload error.');
-  }
-};
 
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const response = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setSignatureData((prev) => ({
+          ...prev,
+          image: data.url,
+        }));
+      } else {
+        alert(data.error || "Signature upload failed.");
+      }
+    } catch (error) {
+      console.error("Signature upload error:", error);
+      alert("Signature upload error.");
+    }
+  };
 
   const onChangeSignature = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setSignatureData((prev) => ({
       ...prev,
-      [name]: value ?? '',
+      [name]: value ?? "",
     }));
   };
 
   const onSubmit = async (data: z.infer<typeof onboardingSchema>) => {
-  try {
-    setIsLoading(true);
+    try {
+      setIsLoading(true);
 
-    const {
-      address1,
-      address2,
-      address3,
-      ...settingFields // all other fields meant for settings
-    } = data;
+      const {
+        address1,
+        address2,
+        address3,
+        ...settingFields
+      } = data;
 
-   const response = await fetch('/api/settinggs', {
-  method: 'POST',
-  body: JSON.stringify({
-    ...settingFields,         // logo, phone etc. for SettingModel
-    signature: signatureData,
-    streetAddress: address1,  // ✅ renamed
-    city: address2,           // ✅ renamed
-    postalCode: address3      // ✅ renamed
-  }),
-});
+      const response = await fetch("/api/settinggs", {
+        method: "POST",
+        body: JSON.stringify({
+          ...settingFields,
+          signature: signatureData,
+          streetAddress: address1,
+          city: address2,
+          postalCode: address3,
+        }),
+      });
 
+      const responseData = await response.json();
+      console.log("API Response:", responseData);
 
-    const responseData = await response.json();
-    console.log('API Response:', responseData);
-
-    if (response.status === 200) {
-      router.push('/dashboard');
+      if (response.status === 200) {
+        router.push("/dashboard");
+      }
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setIsLoading(false);
     }
-  } catch (error) {
-    console.log(error);
-  } finally {
-    setIsLoading(false);
-  }
-};
+  };
 
   return (
-    <div className="flex items-center justify-center min-h-screen p-4 relative bg-white">
-      <div className="absolute top-0 left-0 z-[-2] h-full w-full bg-[radial-gradient(100%_50%_at_50%_0%,rgba(0,163,255,0.13)_0,rgba(0,163,255,0)_50%,rgba(0,163,255,0)_100%)]"></div>
-      <div className="absolute top-0 left-0 h-full w-full bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:16px_16px] [mask-image:radial-gradient(ellipse_50%_50%_at_50%_50%,#000_70%,transparent_100%)]"></div>
+    <div className="auth-wrapper">
+      <div className="container">
+        <div className="form-box" style={{ width: "100%", textAlign: "left", overflowY: "auto" }}>
+          <form onSubmit={handleSubmit(onSubmit)}>
+            <h1>Complete Your Profile</h1>
+            <p>Provide your details to finish onboarding.</p>
 
-      <Card className="min-w-xs lg:min-w-sm w-full max-w-sm max-h-[95vh] overflow-auto z-10">
-        <CardHeader>
-          <CardTitle>You are almost Finished</CardTitle>
-          <CardDescription>Enter your information to create your account</CardDescription>
-        </CardHeader>
-
-        <CardContent>
-          <form className="grid gap-4" onSubmit={handleSubmit(onSubmit)}>
-            <div className="grid gap-2">
-              <label htmlFor="firstName">First name</label>
-              <input
-                id="firstName"
-                placeholder="Joe"
-                autoComplete="given-name"
-                type="text"
-                {...register('firstName', { required: true })}
-                disabled={isLoading}
-              />
-              {errors.firstName && (
-                <p className="text-xs text-red-500">{errors.firstName.message}</p>
-              )}
+            <div className="input-box">
+              <input placeholder="First Name" {...register("firstName")} disabled={isLoading} />
+              {errors.firstName && <p className="text-red-500 text-sm">{errors.firstName.message}</p>}
             </div>
 
-            <div className="grid gap-2">
-              <label htmlFor="lastName">Last name</label>
-              <input
-                id="lastName"
-                placeholder="Biden"
-                type="text"
-                autoComplete="family-name"
-                {...register('lastName', { required: true })}
-                disabled={isLoading}
-              />
-              {errors.lastName && (
-                <p className="text-xs text-red-500">{errors.lastName.message}</p>
-              )}
+            <div className="input-box">
+              <input placeholder="Last Name" {...register("lastName")} disabled={isLoading} />
+              {errors.lastName && <p className="text-red-500 text-sm">{errors.lastName.message}</p>}
             </div>
 
-            <div className="grid gap-2">
-              <label htmlFor="currency">Select currency</label>
-              <input type="hidden" {...register('currency')} />
-              <Select
+            <div className="input-box">
+              <select
+                className="input"
+                onChange={(e) => setValue("currency", e.target.value)}
                 defaultValue="USD"
-                onValueChange={(value) => setValue('currency', value)}
                 disabled={isLoading}
               >
-                <SelectTrigger id="currency" className="w-full">
-                  <SelectValue placeholder="Select currency" />
-                </SelectTrigger>
-                <SelectContent>
-                  {Object.keys(currencyOption).map((item: string) => (
-                    <SelectItem key={item} value={item}>
-                      {item}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                {Object.keys(currencyOption).map((currency) => (
+                  <option key={currency} value={currency}>
+                    {currency}
+                  </option>
+                ))}
+              </select>
             </div>
 
-            <div className="grid gap-2">
-              <label className="text-sm font-medium" htmlFor="mobileNo">Mobile Number</label>
-              <Input
-                id="mobileNo"
-                type="tel"
-                placeholder="+1234567890"
-                autoComplete="tel"
-                {...register('phone', { required: true })}
-                disabled={isLoading}
-              />
-              {errors.phone && (
-                <p className="text-xs text-red-500">{errors.phone.message}</p>
-              )}
+            <div className="input-box">
+              <input placeholder="Mobile Number" {...register("phone")} disabled={isLoading} />
+              {errors.phone && <p className="text-red-500 text-sm">{errors.phone.message}</p>}
             </div>
 
-            {/* Address Fields */}
-            <div className="grid gap-2">
-              <label htmlFor="address1">Address Line 1</label>
-              <Input
-                id="address1"
-                placeholder="Street address"
-                {...register('address1')}
-                disabled={isLoading}
-              />
+            <div className="input-box">
+              <input placeholder="Address Line 1" {...register("address1")} disabled={isLoading} />
+            </div>
+            <div className="input-box">
+              <input placeholder="Address Line 2" {...register("address2")} disabled={isLoading} />
+            </div>
+            <div className="input-box">
+              <input placeholder="Address Line 3" {...register("address3")} disabled={isLoading} />
             </div>
 
-            <div className="grid gap-2">
-              <label htmlFor="address2">Address Line 2</label>
-              <Input
-                id="address2"
-                placeholder="Apartment, suite, unit, etc. (optional)"
-                {...register('address2')}
-                disabled={isLoading}
-              />
-            </div>
+            <div className="input-box">
+              <label>Upload Logo</label>
+              <input type="file" accept="image/*" onChange={handleLogoUpload} disabled={isLoading} />
+              {logoPreview && (
+                <Image
+                  src={logoPreview}
+                  alt="Logo"
+                  width={120}
+                  height={60}
+                  style={{ marginTop: 10, objectFit: "contain" }}
+                />
+              )}            </div>
 
-            <div className="grid gap-2">
-              <label htmlFor="address3">Address Line 3</label>
-              <Input
-                id="address3"
-                placeholder="City, State, ZIP"
-                {...register('address3')}
-                disabled={isLoading}
-              />
-            </div>
-
-            <div className="grid gap-2">
-              <label className="text-sm font-medium" htmlFor="invoiceLogo">Upload Invoice Logo</label>
-              <Input
-                id="invoiceLogo"
-                type="file"
-                accept="image/*"
-                onChange={handleLogoUpload}
-                autoComplete="off"
-                className="w-full file:cursor-pointer file:bg-muted file:text-foreground file:border-none file:px-4 file:py-2"
-                disabled={isLoading}
-              />
-              <div className="rounded-lg border border-dashed p-2 flex justify-center items-center bg-muted">
-                {logoPreview ? (
-                  <Image
-                    className="aspect-video h-20 object-contain"
-                    src={logoPreview}
-                    width={250}
-                    height={96}
-                    alt="Uploaded invoice logo preview"
-                  />
-                ) : (
-                  <p className="text-center text-muted-foreground">No Logo</p>
-                )}
-              </div>
-              {errors.logo && (
-                <p className="text-xs text-red-500">{errors.logo.message}</p>
-              )}
-            </div>
-
-            <div className="grid gap-2">
-              <label className="text-sm font-medium" htmlFor="signatureName">Signature Name</label>
-              <Input
-                id="signatureName"
+            <div className="input-box">
+              <input
                 type="text"
-                placeholder="Enter your signature name"
+                placeholder="Signature Name"
                 name="name"
-                autoComplete="off"
-                value={signatureData.name ?? ''}
+                value={signatureData.name}
                 onChange={onChangeSignature}
                 disabled={isLoading}
               />
             </div>
 
-            <div className="grid gap-2">
-              <label className="text-sm font-medium" htmlFor="image">Upload Signature Image</label>
-              <Input
-                id="image"
+            <div className="input-box">
+              <label>Upload Signature</label>
+              <input
                 type="file"
                 accept="image/*"
                 onChange={handleSignatureImage}
-                className="w-full file:cursor-pointer file:bg-muted file:text-foreground file:border-none file:px-4 file:py-2"
                 disabled={isLoading}
               />
-              <div className="rounded-lg border border-dashed p-2 flex justify-center items-center bg-muted">
-                {signatureData.image ? (
-                  <Image
-                    className="aspect-video h-20 object-contain"
-                    src={signatureData.image}
-                    width={250}
-                    height={96}
-                    alt="Signature preview"
-                  />
-                ) : (
-                  <p className="text-center text-muted-foreground">No Signature</p>
-                )}
-              </div>
+              {signatureData.image && (
+                <Image
+                  src={signatureData.image}
+                  alt="Signature"
+                  width={120}
+                  height={60}
+                  style={{ marginTop: 10, objectFit: "contain" }}
+                />
+              )}
+
             </div>
 
-            <Button disabled={isLoading}>
-              {isLoading ? 'Please wait...' : 'Finished Onboarding'}
-            </Button>
+            <button type="submit" className="btn" disabled={isLoading}>
+              {isLoading ? "Please wait..." : "Finish Onboarding"}
+            </button>
           </form>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }

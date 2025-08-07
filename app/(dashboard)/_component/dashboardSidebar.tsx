@@ -13,7 +13,7 @@ import { Settings } from 'lucide-react'; // ✅ Correct import
 export default function DashboardSidebar({children}:{children:React.ReactNode}) {
     const pathname = usePathname()
     return (
-        <Sidebar>
+<Sidebar >
             <SidebarHeader>
                 <Logo />
 

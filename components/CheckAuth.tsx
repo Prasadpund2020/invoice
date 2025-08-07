@@ -7,14 +7,14 @@ export default async function ProtectedPage() {
     const session = await auth();
 
     if (!session) {
-        redirect("/login");
+        redirect("/Signup");
     }
 
     await connectDB();
     const user = await UserModel.findById(session.user.id);
 
     if (!user) {
-        redirect("/login");
+        redirect("/Signup");
     }
 
     if (!user.firstName || !user.lastName || !user.currency) {

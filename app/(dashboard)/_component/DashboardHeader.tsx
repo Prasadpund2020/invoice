@@ -12,15 +12,15 @@ export default async function DashboardHeader() {
   return (
     <header
       className="
-        sticky top-0 z-50
-        h-14 w-full
-        bg-blue-200/30
-        backdrop-blur-md
-        border-b border-blue-300/30
-        shadow
-        flex items-center
-        px-4
-      "
+    sticky top-0 z-50
+    h-14 w-full
+    backdrop-blur-md
+    border-b border-blue-300/30
+    shadow
+    flex items-center
+    px-4
+  "
+style={{ backgroundColor: '#7494ec' }}
     >
       <SidebarTrigger />
       <div>
