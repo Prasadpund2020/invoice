@@ -18,6 +18,7 @@
   --color-sidebar: var(--sidebar);
   --color-chart-5: var(--chart-5);
   --color-chart-4: var(--chart-4);
+
   --color-chart-3: var(--chart-3);
   --color-chart-2: var(--chart-2);
   --color-chart-1: var(--chart-1);
@@ -140,6 +141,35 @@
 ::-webkit-scrollbar-thumb:hover {
   background-color: #4b5563; /* tailwind gray-600 on hover */
 }
+
+
+/* Glowing blur shadow with your requested gradient */
+.bg-sidebar .glow-blur {
+  content: '';
+  position: absolute;
+  bottom: -100px; /* still starts low for upward fade */
+  left: 0; /* start right at the sidebar edge */
+  width: 180px; /* narrower so it doesn’t spill into neighbors */
+  height: 500px; /* tall for vertical glow */
+  background: radial-gradient(
+    ellipse at bottom,
+    #2687c9,
+    #6dd5fa,
+    #ffffff
+  );
+  filter: blur(100px);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+
+
+
+
+
+
+
 
 
 

@@ -1,8 +1,8 @@
 import { auth } from "@/lib/auth";
 import { connectDB } from "@/lib/connectDB";
 import UserModel from "@/models/user.model";
-import UserProfileDropDown from "./UserProfileDropdown";
 import { SidebarTrigger } from "@/components/ui/sidebar";
+import UserProfileDropDown from "./UserProfileDropdown";
 
 export default async function DashboardHeader() {
   const session = await auth();
@@ -10,8 +10,8 @@ export default async function DashboardHeader() {
   const user = await UserModel.findById(session?.user.id);
 
   return (
-    <header
-      className="
+  <header
+  className="
     sticky top-0 z-50
     h-14 w-full
     backdrop-blur-md
@@ -20,8 +20,10 @@ export default async function DashboardHeader() {
     flex items-center
     px-4
   "
-style={{ backgroundColor: '#7494ec' }}
-    >
+  style={{
+    background: 'linear-gradient(90deg, rgba(41, 128, 185, 0.7), rgba(109, 213, 250, 0.6), rgba(255, 255, 255, 0.4))'
+  }}
+>
       <SidebarTrigger />
       <div>
         welcome

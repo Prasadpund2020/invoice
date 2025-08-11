@@ -13,16 +13,20 @@ export default function AuthPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false); // Added loading state
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    setLoading(true); // Start loading
 
     const res = await signIn("credentials", {
       redirect: false,
       email,
       password,
     });
+
+    setLoading(false); // Stop loading
 
     if (res?.error) {
       setError("Invalid email or password.");
@@ -34,12 +38,15 @@ export default function AuthPage() {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    setLoading(true); // Start loading
 
     const res = await fetch("/api/Signup", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),
     });
+
+    setLoading(false); // Stop loading
 
     if (res.ok) {
       setIsLogin(true); // Switch to login view
@@ -89,10 +96,10 @@ export default function AuthPage() {
             <div className="forgot-link">
               <a href="#">Forgot Password?</a>
             </div>
-            <button type="submit" className="btn">Login</button>
+            <button type="submit" className="btn" disabled={loading}>
+              {loading ? <span className="loader"></span> : "Login"}
+            </button>
             {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
-            
-          
           </form>
         </div>
 
@@ -120,10 +127,11 @@ export default function AuthPage() {
               />
               <i className="bx bxs-lock-alt"></i>
             </div>
-            <button type="submit" className="btn">Register</button>
+            <button type="submit" className="btn" disabled={loading}>
+              {loading ? <span className="loader"></span> : "Register"}
+            </button>
             {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
             <p>or register with social platforms</p>
-            
           </form>
         </div>
 
@@ -135,6 +143,7 @@ export default function AuthPage() {
             <button
               className="btn register-btn"
               onClick={() => setIsLogin(false)}
+              disabled={loading}
             >
               Register
             </button>
@@ -145,6 +154,7 @@ export default function AuthPage() {
             <button
               className="btn login-btn"
               onClick={() => setIsLogin(true)}
+              disabled={loading}
             >
               Login
             </button>
