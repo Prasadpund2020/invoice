@@ -33,7 +33,7 @@ export default function DashboardPage() {
     totalRevenue: "$0",
     totalInvoice: 0,
     paidInvoice: 0,
-    UnpaidInvoice: 0,
+    PENDINGInvoice: 0,
     recentInvoice: [],
     chartData: [],
   });
@@ -48,7 +48,7 @@ export default function DashboardPage() {
           totalRevenue: responseData.totalRevenue,
           totalInvoice: responseData.totalInvoice,
           paidInvoice: responseData.paidInvoice,
-          UnpaidInvoice: responseData.UnpaidInvoice,
+          PENDINGInvoice: responseData.PENDINGInvoice,
           recentInvoice: responseData.recentInvoice || [],
           chartData: responseData.chartData || [],
         });
@@ -139,7 +139,7 @@ export default function DashboardPage() {
         </CardHeader>
         <CardContent>
           <div>
-            <p className="text-lg">{data?.UnpaidInvoice ?? "-"}</p>
+            <p className="text-lg">{data?.PENDINGInvoice ?? "-"}</p>
             <span className="text-muted-foreground text-xs">last 30 days</span>
           </div>
         </CardContent>

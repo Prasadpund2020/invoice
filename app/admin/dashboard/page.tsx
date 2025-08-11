@@ -19,13 +19,14 @@ interface ChartDataItem {
     date: string;
     totalRevenue: number;
     paidRevenue: number;
+    PENDINGInvoice:number;
 }
 
 interface DashboardData {
     totalRevenue: string;
     totalInvoice: number;
     paidInvoice: number;
-    UnpaidInvoice: number;
+    PENDINGInvoice: number;
     totalUsers: number;
     recentInvoice: (IInvoice & { userEmail?: string })[];
     chartData: ChartDataItem[];
@@ -50,7 +51,7 @@ export default function AdminDashboardPage() {
         totalRevenue: "$0",
         totalInvoice: 0,
         paidInvoice: 0,
-        UnpaidInvoice: 0,
+        PENDINGInvoice: 0,
         totalUsers: 0,
         recentInvoice: [],
         chartData: [],
@@ -66,7 +67,7 @@ export default function AdminDashboardPage() {
                     totalRevenue: responseData.totalRevenue,
                     totalInvoice: responseData.totalInvoice,
                     paidInvoice: responseData.paidInvoice,
-                    UnpaidInvoice: responseData.UnpaidInvoice,
+                    PENDINGInvoice: responseData.PENDINGInvoice,
                     totalUsers: responseData.totalUsers,
                     recentInvoice: responseData.recentInvoice || [],
                     chartData: responseData.chartData || [],
@@ -162,7 +163,7 @@ export default function AdminDashboardPage() {
                 </CardHeader>
                 <CardContent>
                     <div>
-                        <p className="text-lg">{data?.UnpaidInvoice ?? "-"}</p>
+                        <p className="text-lg">{data?.PENDINGInvoice ?? "-"}</p>
                         <span className="text-muted-foreground text-xs">all users / last 30 days</span>
                     </div>
                 </CardContent>

@@ -61,7 +61,7 @@ export async function GET() {
         totalRevenue: totalRevenue.toFixed(2),
         totalInvoice: invoices.length,
         paidInvoice: invoices.filter((inv) => inv.status === "PAID").length,
-        UnpaidInvoice: invoices.filter((inv) => inv.status === "PENDING").length,
+        PENDINGInvoice: invoices.filter((inv) => inv.status === "PENDING").length,
         totalUsers, // ✅ Add this to response
         recentInvoice: formattedInvoices.slice(-5).reverse(),
         chartData,

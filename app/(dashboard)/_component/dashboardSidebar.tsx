@@ -53,8 +53,19 @@ export default function DashboardSidebar({children}:{children:React.ReactNode}) 
                         <SidebarMenuButton asChild>
                             <Link href={"/addClient"}  className ={cn(pathname ==="/addClient"&& "bg-white")}>
                             <BookAIcon/>
-                            <span>
+                            <span >
                                 Add client 
+                            </span>
+                            </Link>
+                        </SidebarMenuButton>
+
+                    </SidebarMenuItem>
+                    <SidebarMenuItem>
+                        <SidebarMenuButton asChild>
+                            <Link href={"/addClient"}  className ={cn(pathname ==="/addClient"&& "bg-white")}>
+                            <BookAIcon/>
+                            <span >
+                                Add PRODUCT
                             </span>
                             </Link>
                         </SidebarMenuButton>

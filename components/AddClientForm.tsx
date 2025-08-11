@@ -1,12 +1,13 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import toast from "react-hot-toast";
+import { cn } from "@/lib/utils";
 
 const ClientSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -78,7 +79,7 @@ export default function AddClientForm({ onSuccess }: { onSuccess?: () => void })
         <Input placeholder="City / State / Country / Pincode" {...register("address3")} />
         {errors.address3 && <p className="text-xs text-red-500">{errors.address3.message}</p>}
       </div>
-      <Button type="submit">Add Client</Button>
+      <Button className={cn(buttonVariants(), "cursor-pointer btn-gradient-faint")}  type="submit">Add Client</Button>
     </form>
   );
 }

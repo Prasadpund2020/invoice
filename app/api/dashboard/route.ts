@@ -27,11 +27,11 @@ export async function GET() {
       userId: session.user.id,
     };
 
-    const [data, totalInvoice, paidInvoice, UnpaidInvoice, recentInvoice] = await Promise.all([
+    const [data, totalInvoice, paidInvoice, PENDINGInvoice, recentInvoice] = await Promise.all([
       InvoiceModel.find(query),
       InvoiceModel.countDocuments(query),
       InvoiceModel.countDocuments({ ...query, status: "PAID" }),
-      InvoiceModel.countDocuments({ ...query, status: "UNPAID" }),
+      InvoiceModel.countDocuments({ ...query, status: "PENDING" }),
       InvoiceModel.find(query).limit(5),
     ]);
 
@@ -50,7 +50,7 @@ export async function GET() {
       totalRevenue: `${currencyOption[session.user.currency as TCurrencyKey]}${totalRevenue}`,
       totalInvoice,
       paidInvoice,
-      UnpaidInvoice,
+      PENDINGInvoice,
       recentInvoice,
       chartData,
     });

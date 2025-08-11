@@ -11,7 +11,7 @@ import Image from "next/image";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button"
 import toast from 'react-hot-toast';
-import { uploadToCloudinary } from '@/lib/cloudinaryUpload'; // ← adjust path
+//import { uploadToCloudinary } from '@/lib/cloudinaryUpload'; // ← adjust path
 
 
 type TSignatureData = {
@@ -57,27 +57,96 @@ export default function SettingPage() {
         }));
     };
 
-    const handleSignatureImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
+    {/* const handleSignatureImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const files = e.target.files;
+        if (!files || files.length === 0) return;
+        const file = files[0];
 
         if (!['image/png', 'image/jpeg'].includes(file.type)) {
             alert('Please upload a PNG or JPEG file.');
             return;
         }
 
-        try {
-            const cloudinaryUrl = await uploadToCloudinary(file);
+        const formData = new FormData();
+        formData.append('file', file);
 
+        try {
+            // Upload to Cloudinary first
+            const uploadResponse = await fetch('/api/upload', {
+                method: 'POST',
+                body: formData,
+            });
+
+            const uploadData = await uploadResponse.json();
+
+            if (!uploadResponse.ok) {
+                alert(uploadData.error || 'Upload failed');
+                return;
+            }
+
+            const imageUrl = uploadData.url;
+
+            // Update local state (optional)
             setsignatureData((prev) => ({
                 ...prev,
-                image: cloudinaryUrl,
+                image: imageUrl,
             }));
+
+            // Call your settings API to save the signature URL + name
+            const saveResponse = await fetch('/api/settinggs', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    signature: {
+                        image: imageUrl,
+                        name: 'qwert',  // or from your form/input state
+                    },
+                }),
+            });
+
+            const saveData = await saveResponse.json();
+
+            if (!saveResponse.ok) {
+                alert(saveData.message || 'Failed to save signature');
+            } else {
+                console.log('Signature saved:', saveData.settings);
+                // Optionally update your global settings state here with saveData.settings
+            }
         } catch (error) {
-            console.error("Upload failed:", error);
-            alert("Failed to upload signature image.");
+            console.error('Error uploading or saving signature:', error);
+            alert('Failed to upload and save signature image.');
         }
     };
+    */}
+    const handleSignatureImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const files = e.target.files;
+  if (!files || files.length === 0) return;
+
+  const file = files[0];
+  const formData = new FormData();
+  formData.append('file', file);
+
+  try {
+    const res = await fetch('/api/upload', {
+      method: 'POST',
+      body: formData,
+    });
+    const data = await res.json();
+
+    if (res.ok && data.url) {
+      setsignatureData(prev => ({
+        ...prev,
+        image: data.url,
+      }));
+    } else {
+      console.error('Upload failed:', data.error);
+      alert('Image upload failed.');
+    }
+  } catch (error) {
+    console.error('Upload error:', error);
+    alert('Upload error');
+  }
+};
 
 
     const handleOnChangeLogo = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -148,6 +217,10 @@ export default function SettingPage() {
         }
     };
 
+
+    useEffect(() => {
+  console.log("signatureData changed:", signatureData);
+}, [signatureData]);
 
 
     useEffect(() => {

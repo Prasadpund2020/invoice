@@ -5,6 +5,23 @@ import UserModel from '@/models/user.model';
 import { connectDB } from '@/lib/connectDB';
 import type { IUser } from '@/models/user.model';
 
+interface ISignature {
+  name?: string;
+  image?: string;
+}
+
+interface ISettings {
+  userId: string;
+  invoiceLogo?: string;
+  accountName?: string;
+  accountNumber?: string;
+  ifscCode?: string;
+  panNumber?: string;
+  upiId?: string;
+  primaryColor?: string;
+  signature?: ISignature;
+}
+
 export async function POST(request: NextRequest) {
   try {
     const session = await auth();
@@ -37,7 +54,7 @@ export async function POST(request: NextRequest) {
 
     const userId = session.user.id;
 
-    // ✅ Update user personal info
+    // Update user personal info
     const userUpdatePayload: Partial<IUser> = {
       ...(firstName && { firstName }),
       ...(lastName && { lastName }),
@@ -49,11 +66,11 @@ export async function POST(request: NextRequest) {
     };
     await UserModel.findByIdAndUpdate(userId, userUpdatePayload, { new: true });
 
-    // ✅ Find existing settings
+    // Find existing settings
     const existingSettings = await SettingModel.findOne({ userId });
 
-    // ✅ Prepare updated settings
-    const updatedSettings = {
+    // Prepare updated settings
+    const updatedSettings: Partial<ISettings> = {
       userId,
       ...(logo && { invoiceLogo: logo }),
       ...(accountName && { accountName }),
@@ -62,13 +79,14 @@ export async function POST(request: NextRequest) {
       ...(panNumber && { panNumber }),
       ...(upiId && { upiId }),
       ...(primaryColor && { primaryColor }),
-      ...(signature && {
-        signature: {
-          ...((existingSettings?.signature || {}) as object),
-          ...signature
-        }
-      }),
     };
+
+    if (signature) {
+      updatedSettings.signature = {
+        ...(existingSettings?.signature || {}),
+        ...signature,
+      };
+    }
 
     let updatedDoc;
     if (existingSettings) {

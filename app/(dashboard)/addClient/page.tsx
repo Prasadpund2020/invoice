@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { DataTable } from "@/components/ui/DataTable";
 import { IClient } from "@/models/clients";
 import AddClientForm from "@/components/AddClientForm";
@@ -10,6 +10,7 @@ import { format } from "date-fns";
 import toast from "react-hot-toast";
 import Loading from "@/components/Loading";
 import { ArrowLeft } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export default function ClientPage() {
   const [clients, setClients] = useState<IClient[]>([]);
@@ -38,6 +39,30 @@ export default function ClientPage() {
     fetchClients();
   }, []);
 
+  const handleDelete = async (clientId: string) => {
+    const confirmDelete = confirm("Are you sure you want to delete this client?");
+    if (!confirmDelete) return;
+
+    const prevClients = [...clients];
+    setClients((prev) => prev.filter((client) => client._id !== clientId));
+
+    try {
+      const res = await fetch(`/api/clients/${clientId}`, { method: "DELETE" });
+
+      if (res.ok) {
+        toast.success("Client deleted successfully");
+      } else {
+        const error = await res.json();
+        toast.error(error.message || "Failed to delete client");
+        setClients(prevClients); // rollback
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("An error occurred");
+      setClients(prevClients); // rollback
+    }
+  };
+
   const columns: ColumnDef<IClient>[] = [
     { accessorKey: "name", header: "Name" },
     { accessorKey: "email", header: "Email" },
@@ -50,36 +75,15 @@ export default function ClientPage() {
       cell: ({ row }) => format(new Date(row.original.createdAt), "PPP"),
     },
     {
-      // 🔁 CHANGE HERE: Added delete button column
       header: "Actions",
       id: "actions",
       cell: ({ row }) => {
-        const clientId = row.original._id; // Ensure your IClient has _id: string
+        const clientId = row.original._id;
         return (
           <Button
             variant="destructive"
             size="sm"
-            onClick={async () => {
-              const confirmDelete = confirm("Are you sure you want to delete this client?");
-              if (!confirmDelete) return;
-
-              try {
-                const res = await fetch(`/api/clients/${clientId}`, {
-                  method: "DELETE",
-                });
-
-                if (res.ok) {
-                  toast.success("Client deleted successfully");
-                  setClients((prev) => prev.filter((client) => client._id !== clientId));
-                } else {
-                  const error = await res.json();
-                  toast.error(error.message || "Failed to delete client");
-                }
-              } catch (err) {
-                console.error(err);
-                toast.error("An error occurred");
-              }
-            }}
+            onClick={() => handleDelete(clientId)}
           >
             Delete
           </Button>
@@ -104,7 +108,7 @@ export default function ClientPage() {
           <h1 className="text-xl font-semibold">Clients</h1>
         </div>
 
-        <Button onClick={() => setShowForm((prev) => !prev)}>
+        <Button  className={cn(buttonVariants(), "cursor-pointer btn-gradient-faint")} onClick={() => setShowForm((prev) => !prev)}>
           {showForm ? "Hide Form" : "Add Client"}
         </Button>
       </div>
