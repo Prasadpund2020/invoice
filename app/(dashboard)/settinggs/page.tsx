@@ -11,6 +11,7 @@ import Image from "next/image";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button"
 import toast from 'react-hot-toast';
+import { uploadToCloudinary } from "@/lib/cloudinaryUpload";
 //import { uploadToCloudinary } from '@/lib/cloudinaryUpload'; // ← adjust path
 
 
@@ -40,12 +41,13 @@ export default function SettingPage() {
     });
 
     const onChangeSignature = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const { name, value } = e.target;
-        setsignatureData(prev => ({
-            ...prev,
-            [name]: value
-        }));
-    }
+    const { name, value } = e.target;
+    setsignatureData(prev => ({
+        ...prev, // ensures image stays
+        [name]: value
+    }));
+};
+
 
 
 
@@ -118,35 +120,25 @@ export default function SettingPage() {
         }
     };
     */}
-    const handleSignatureImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
+ const handleSignatureImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
   const files = e.target.files;
-  if (!files || files.length === 0) return;
+  if (!files?.length) return;
 
   const file = files[0];
-  const formData = new FormData();
-  formData.append('file', file);
-
   try {
-    const res = await fetch('/api/upload', {
-      method: 'POST',
-      body: formData,
-    });
-    const data = await res.json();
-
-    if (res.ok && data.url) {
-      setsignatureData(prev => ({
-        ...prev,
-        image: data.url,
-      }));
-    } else {
-      console.error('Upload failed:', data.error);
-      alert('Image upload failed.');
-    }
+    const imageUrl = await uploadToCloudinary(file); // ⬅ direct to Cloudinary
+    setsignatureData(prev => ({
+      ...prev,
+      image: imageUrl,
+    }));
+    toast.success('Image uploaded successfully');
   } catch (error) {
-    console.error('Upload error:', error);
-    alert('Upload error');
+    console.error(error);
+    toast.error('Image upload failed');
   }
 };
+
+
 
 
     const handleOnChangeLogo = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -246,6 +238,7 @@ export default function SettingPage() {
         e.preventDefault();
         try {
             setIsLoading(true);
+            console.log("onsubmit", data.signature)
             const response = await fetch("/api/settinggs", {
                 method: "POST",
                 body: JSON.stringify(data),

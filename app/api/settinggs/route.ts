@@ -54,6 +54,8 @@ export async function POST(request: NextRequest) {
 
     const userId = session.user.id;
 
+    console.log("####",signature.image)
+
     // Update user personal info
     const userUpdatePayload: Partial<IUser> = {
       ...(firstName && { firstName }),
@@ -82,19 +84,22 @@ export async function POST(request: NextRequest) {
     };
     console.log("Updated settings payload:", updatedSettings);
 
-    if (signature) {
-      updatedSettings.signature = {
-        ...(existingSettings?.signature || {}),
-        ...signature,
-      };
-    }
-    console.log("Final settings to be saved:", updatedSettings);
-    let updatedDoc;
-    if (existingSettings) {
-      updatedDoc = await SettingModel.findByIdAndUpdate(existingSettings._id, updatedSettings, { new: true });
-    } else {
-      updatedDoc = await SettingModel.create(updatedSettings);
-    }
+    const asAny = updatedSettings as any;
+
+if (signature) {
+  if (signature.name !== undefined) {
+    asAny['signature.name'] = signature.name;
+  }
+  if (signature.image !== undefined) {
+    asAny['signature.image'] = signature.image;
+  }
+}
+    console.log("Final settings to be saved:", updatedSettings.signature?.image);
+   const updatedDoc = existingSettings
+  ? await SettingModel.findByIdAndUpdate(existingSettings._id, asAny, { new: true })
+  : await SettingModel.create(asAny);
+
+    console.log("UPADTED DATA",updatedDoc)
 
     return NextResponse.json({ message: 'Settings updated successfully', settings: updatedDoc }, { status: 200 });
   } catch (error: unknown) {
