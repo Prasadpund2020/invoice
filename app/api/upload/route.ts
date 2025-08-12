@@ -28,6 +28,7 @@ export async function POST(req: NextRequest) {
         { folder: 'invoices' },
         (error, result) => {
           if (error) {
+            console.error('Cloudinary upload error:', error);
             reject(error);
           } else {
             resolve(result as UploadApiResponse);
@@ -39,7 +40,8 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ url: uploadResult.secure_url });
   } catch (error: unknown) {
-    console.error('Upload error:', error);
+    console.log('Upload error:', error);
+   // throw error; // Re-throw to be caught by Next.js error handling
     const message = error instanceof Error ? error.message : 'Unknown error';
     return NextResponse.json({ error: message }, { status: 500 });
   }

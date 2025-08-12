@@ -28,9 +28,9 @@ export async function POST(request: NextRequest) {
     if (!session) {
       return NextResponse.json({ message: 'Unauthorized access' }, { status: 401 });
     }
-
+   
     await connectDB();
-
+     console.log("Settings API called by prasad user:", session.user.id);
     const body = await request.json();
     console.log("Settings API received:", body);
 
@@ -80,6 +80,7 @@ export async function POST(request: NextRequest) {
       ...(upiId && { upiId }),
       ...(primaryColor && { primaryColor }),
     };
+    console.log("Updated settings payload:", updatedSettings);
 
     if (signature) {
       updatedSettings.signature = {
@@ -87,7 +88,7 @@ export async function POST(request: NextRequest) {
         ...signature,
       };
     }
-
+    console.log("Final settings to be saved:", updatedSettings);
     let updatedDoc;
     if (existingSettings) {
       updatedDoc = await SettingModel.findByIdAndUpdate(existingSettings._id, updatedSettings, { new: true });

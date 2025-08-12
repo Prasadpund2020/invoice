@@ -20,6 +20,7 @@ const ClientSchema = new Schema<IClient>(
     address2: { type: String, required: true },
     address3: { type: String, required: true },
     user: { type: Schema.Types.ObjectId, ref: "User", required: true }, // ✅ No error now
+    
   },
   { timestamps: true }
 );

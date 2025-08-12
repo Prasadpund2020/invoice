@@ -19,6 +19,7 @@ import { z } from "zod";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import { Textarea } from "@/components/ui/textarea";
+import { IProduct } from "@/models/products";
 
 
 interface ICreateEditInvoice {
@@ -89,7 +90,7 @@ export default function CreateEditInvoice({
   const router = useRouter();
   console.log("currency", currency);
 
-    const [showBankDetails, setShowBankDetails] = useState(false);
+  const [showBankDetails, setShowBankDetails] = useState(false);
 
   // ✅ Add setValue to the dependencies and call it after fetch
   useEffect(() => {
@@ -106,6 +107,23 @@ export default function CreateEditInvoice({
     }
     // ✅ Do not include setValue here
   }, [invoiceId, setValue]);
+
+  const [products, setProducts] = useState<IProduct[]>([]);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const res = await fetch("/api/products");
+        const data = await res.json();
+        if (res.ok) {
+          setProducts(data || []);
+        }
+      } catch (err) {
+        console.error("Error fetching products:", err);
+      }
+    };
+    fetchProducts();
+  }, []);
 
 
 
@@ -129,20 +147,20 @@ export default function CreateEditInvoice({
 
         const response = await fetch(`/api/invoice?invoiceId=${invoiceId}&includeBankDetails=${showBankDetails}`);
 
-        
+
         const responseData = await response.json();
 
         if (response.status === 200 && responseData.data?.length > 0) {
           const invoiceData = responseData.data[0];
           console.log("invoiceData in edit", invoiceData.currency);
-          
+
           reset({
             ...invoiceData,
             invoice_no: String(invoiceData.invoice_no ?? ''),
             invoice_date: new Date(invoiceData.invoice_date), // ✅ Convert to Date
             due_date: new Date(invoiceData.due_date),         // ✅ Convert to Date
           });
-       
+
         }
       } catch (error) {
         console.error("Error fetching invoice data:", error);
@@ -154,7 +172,7 @@ export default function CreateEditInvoice({
     if (invoiceId) {
       fetchData();
     }
-  }, [invoiceId,showBankDetails, reset]);
+  }, [invoiceId, showBankDetails, reset]);
 
 
 
@@ -190,7 +208,7 @@ export default function CreateEditInvoice({
   }, [items, setValue]);
 
 
- 
+
 
 
   //add new item row
@@ -217,11 +235,11 @@ export default function CreateEditInvoice({
 
   const onSubmit = async (data: z.infer<typeof InvoiceSchemaZod>) => {
     console.log("onSubmit", data);
-     const payload = {
-    ...data,
-    showBankDetails, // ✅ <-- Include this in payload
-  };
-  console.log("Payload to send:", payload);
+    const payload = {
+      ...data,
+      showBankDetails, // ✅ <-- Include this in payload
+    };
+    console.log("Payload to send:", payload);
 
 
     //for create invoice
@@ -251,7 +269,7 @@ export default function CreateEditInvoice({
         body: JSON.stringify({
           invoiceId,
           ...data,
-           ...payload,
+          ...payload,
         }),
       });
       await response.json();
@@ -305,6 +323,7 @@ export default function CreateEditInvoice({
 
     fetchClients();
   }, []);
+
 
 
 
@@ -600,24 +619,32 @@ export default function CreateEditInvoice({
             <div className="grid grid-cols-6 gap-2" key={index}>
               <div className="col-span-3">
                 <Input
-                  placeholder="Enter item name"
                   type="text"
-                  {...register(`items.${index}.item_name`, { required: true })}
-                  disabled={isLoading}
-                />
-                {errors.items && errors.items[index]?.item_name && (
-                  <p className="text-xs text-red-500">
-                    {errors.items[index]?.item_name.message}
-                  </p>
+                  list="product-names"
+                  placeholder="Enter item name"
+                  {...register(`items.${index}.item_name`, {
+                    required: true,
+                    onChange: (e) => {
+                      const selectedProduct = products.find(p => p.name === e.target.value);
+                      if (selectedProduct) {
+                        setValue(`items.${index}.item_description`, selectedProduct.description || "");
+                        setValue(`items.${index}.price`, selectedProduct.price || 0);
+                        setValue(`items.${index}.quantity`, selectedProduct.quantity || 1);
 
-                )}
-                {/* ✅ ADD THIS BELOW item_name Input */}
-                <Textarea
-                  placeholder="Enter description for this item (optional)"
-                  {...register(`items.${index}.item_description`)}
+                        // Auto-calc total
+                        setValue(`items.${index}.total`, (selectedProduct.price || 0) * (selectedProduct.quantity || 1));
+                      }
+                    },
+                  })}
                   disabled={isLoading}
-                  className="mt-2"
                 />
+
+                <datalist id="product-names">
+                  {products.map((product) => (
+                    <option key={product._id} value={product.name} />
+                  ))}
+                </datalist>
+
 
 
 
@@ -712,32 +739,32 @@ export default function CreateEditInvoice({
         >
           Add Item
         </Button>
-    <div className="flex items-center gap-2 mt-4">
-  <Controller
-  name="showBankDetails"
-  control={control}
-  render={({ field }) => (
-    <div>
-      <input
-        type="checkbox"
-        id="toggle-bank-details"
-        checked={field.value || false} // ✅ Correctly bind the boolean value
-        onChange={(e) => {
-          const checked = e.target.checked;
-          field.onChange(checked);       // ✅ Send boolean to RHF
-          setShowBankDetails(checked);   // ✅ (Optional) Local state
-        }}
-        onBlur={field.onBlur}
-        name={field.name}
-        ref={field.ref}
-      />
-      <label htmlFor="toggle-bank-details">
-        Include bank details in PDF
-      </label>
-    </div>
-  )}
-/>
-</div>
+        <div className="flex items-center gap-2 mt-4">
+          <Controller
+            name="showBankDetails"
+            control={control}
+            render={({ field }) => (
+              <div>
+                <input
+                  type="checkbox"
+                  id="toggle-bank-details"
+                  checked={field.value || false} // ✅ Correctly bind the boolean value
+                  onChange={(e) => {
+                    const checked = e.target.checked;
+                    field.onChange(checked);       // ✅ Send boolean to RHF
+                    setShowBankDetails(checked);   // ✅ (Optional) Local state
+                  }}
+                  onBlur={field.onBlur}
+                  name={field.name}
+                  ref={field.ref}
+                />
+                <label htmlFor="toggle-bank-details">
+                  Include bank details in PDF
+                </label>
+              </div>
+            )}
+          />
+        </div>
 
       </div>
 
@@ -754,8 +781,8 @@ export default function CreateEditInvoice({
             />
           </div>
           <div className="grid grid-cols-2">
-            <Label>Discount in {getValues("currency")}</Label>      
-                  <Input
+            <Label>Discount in {getValues("currency")}</Label>
+            <Input
               placeholder="discount"
               type="number"
               {...register("discount", { valueAsNumber: true })}
