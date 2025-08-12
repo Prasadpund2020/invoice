@@ -4,14 +4,28 @@ import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import { Button } from "@/components/ui/button";
 
+type FormData = {
+  name: string;
+  description: string;
+  price: number;
+  quantity: number;
+  total: number;
+};
+
 export default function AddProductForm({ onSuccess }: { onSuccess: () => void }) {
-  const [form, setForm] = useState({ name: "", description: "", price: 0, quantity: 1, total: 0 });
+  const [form, setForm] = useState<FormData>({
+    name: "",
+    description: "",
+    price: 0,
+    quantity: 1,
+    total: 0,
+  });
 
   useEffect(() => {
     setForm((prev) => ({ ...prev, total: prev.quantity * prev.price }));
   }, [form.quantity, form.price]);
 
-  const handleChange = (field: string, value: any) => {
+  const handleChange = <K extends keyof FormData>(field: K, value: FormData[K]) => {
     setForm((prev) => ({ ...prev, [field]: value }));
   };
 
