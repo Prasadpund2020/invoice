@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
 @import "tailwindcss";
 @import "tw-animate-css";
 
@@ -143,28 +144,40 @@
 }
 
 
-/* Glowing blur shadow with your requested gradient */
+
+
+.bg-sidebar {
+  position: relative; /* Make sure glow-blur absolute positions relative to this */
+  background: radial-gradient(125% 125% at 50% 10%, #fff 40%, #63e 100%);
+  /* You can keep fallback colors if needed, e.g.
+  background-color: var(--sidebar);
+  */
+  overflow: visible; /* so glow-blur can show outside */
+}
+
+
 .bg-sidebar .glow-blur {
   content: '';
   position: absolute;
-  bottom: -100px; /* still starts low for upward fade */
-  left: 0; /* start right at the sidebar edge */
-  width: 145px; /* narrower so it doesn’t spill into neighbors */
-  height: 625px; /* tall for vertical glow */
+  bottom: -100px; 
+  left: 0; 
+  width: 145px; 
+  height: 625px; 
 
   
-  background: radial-gradient(
+     background: radial-gradient(
     ellipse at bottom,
-    #044c7c,
+    #303233,
 
-    #2f95b9,
-    #ffffff
+    #232324,
+    #201f1f
   );
   filter: blur(100px);
   border-radius: 50%;
   pointer-events: none;
   z-index: 0;
 }
+  
 
 
 .loader {
@@ -219,6 +232,24 @@
   border-radius: inherit;
   z-index: -1; /* behind the text */
   pointer-events: none;
+}
+
+html, body {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 400; /* default weight */
+  margin: 0;
+  padding: 0;
+}
+h1 {
+  font-weight: 700;
+}
+
+p {
+  font-weight: 400;
+}
+
+strong {
+  font-weight: 600;
 }
 
 

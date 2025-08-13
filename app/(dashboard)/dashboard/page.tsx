@@ -90,7 +90,17 @@ export default function DashboardPage() {
       accessorKey: "status",
       header: "Status",
       cell: ({ row }) => {
-        return <Badge>{row.original.status}</Badge>;
+        const status = row.original.status;
+        const statusStyles =
+          status === "PAID"
+            ? "bg-green-100 text-green-700"
+            : status === "PENDING"
+              ? "bg-red-100 text-red-700"
+              : status === "CANCEL"
+                ? "bg-gray-200 text-gray-700"
+                : "bg-muted text-muted-foreground";
+
+        return <Badge className={statusStyles}>{status}</Badge>;
       },
     },
   ];
@@ -123,7 +133,7 @@ export default function DashboardPage() {
 
       <Card className="grid gap-3">
         <CardHeader>
-          <CardTitle className="text-xl">Paid Invoice</CardTitle>
+          <CardTitle className="text-xl text-green-400">Paid Invoice</CardTitle>
         </CardHeader>
         <CardContent>
           <div>
@@ -135,7 +145,7 @@ export default function DashboardPage() {
 
       <Card className="grid gap-3">
         <CardHeader>
-          <CardTitle className="text-xl">Unpaid Invoice</CardTitle>
+          <CardTitle className="text-xl text-red-400">Unpaid Invoice</CardTitle>
         </CardHeader>
         <CardContent>
           <div>

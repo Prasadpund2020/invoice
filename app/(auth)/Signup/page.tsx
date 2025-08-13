@@ -2,11 +2,12 @@
 
 import "@/app/styles/SignUp_LogIn_Form.css";
 import { useState, useRef, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { signIn } from "next-auth/react";
 
 export default function AuthPage() {
   const router = useRouter();
+  const pathname = usePathname();
   const containerRef = useRef<HTMLDivElement | null>(null);
 
   const [isLogin, setIsLogin] = useState(true);
@@ -14,6 +15,13 @@ export default function AuthPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false); // Added loading state
+
+  // ✅ Stop loading after navigation completes
+  useEffect(() => {
+    if (pathname === "/dashboard") {
+      setLoading(false);
+    }
+  }, [pathname]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,12 +34,12 @@ export default function AuthPage() {
       password,
     });
 
-    setLoading(false); // Stop loading
-
     if (res?.error) {
+      setLoading(false); // Stop only if login failed
       setError("Invalid email or password.");
     } else {
       router.push("/dashboard");
+      // Don't stop loading here — it will stop after navigation
     }
   };
 
@@ -48,11 +56,18 @@ export default function AuthPage() {
 
     setLoading(false); // Stop loading
 
+    const data = await res.json();
+
     if (res.ok) {
       setIsLogin(true); // Switch to login view
     } else {
-      const data = await res.json();
-      setError(data.message || "Something went wrong.");
+      // Added logic for already existing user
+      if (data.message?.toLowerCase().includes("already exists")) {
+        setIsLogin(true); // Switch to login form if user already exists
+        setError("Account already exists. Please log in.");
+      } else {
+        setError(data.message || "Something went wrong.");
+      }
     }
   };
 
@@ -93,9 +108,6 @@ export default function AuthPage() {
               />
               <i className="bx bxs-lock-alt"></i>
             </div>
-            <div className="forgot-link">
-              <a href="#">Forgot Password?</a>
-            </div>
             <button type="submit" className="btn" disabled={loading}>
               {loading ? <span className="loader"></span> : "Login"}
             </button>
@@ -131,7 +143,6 @@ export default function AuthPage() {
               {loading ? <span className="loader"></span> : "Register"}
             </button>
             {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
-            <p>or register with social platforms</p>
           </form>
         </div>
 

@@ -49,6 +49,7 @@ export default function ProductPage() {
 
     try {
       const res = await fetch(`/api/products/${productId}`, { method: "DELETE" });
+
       if (res.ok) {
         toast.success("Product deleted successfully");
       } else {
@@ -79,7 +80,11 @@ export default function ProductPage() {
       cell: ({ row }) => {
         const productId = row.original._id;
         return (
-          <Button variant="destructive" size="sm" onClick={() => handleDelete(productId)}>
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={() => handleDelete(productId)}
+          >
             Delete
           </Button>
         );

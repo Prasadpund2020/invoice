@@ -22,7 +22,8 @@ export default async function DashboardHeader() {
     relative
   "
       style={{
-        background: 'linear-gradient(90deg, rgba(41, 128, 185, 0.7), rgba(109, 213, 250, 0.6), rgba(255, 255, 255, 0.4))'
+        background: 'radial-gradient(125% 125% at 50% 10%, rgba(99, 102, 238, 0.4) 40%, #63e 100%)',
+
       }}
     >
       {/* Glow blur layer */}
@@ -33,7 +34,8 @@ export default async function DashboardHeader() {
           position: 'absolute',
           bottom: '-100px',
           left: '0',
-          background: 'radial-gradient(ellipse at bottom, #2687c9, #6dd5fa, #ffffff)',
+          
+          background: 'radial-gradient(ellipse at bottom, #303233, #2c97be, #bb8080)',
           filter: 'blur(100px)',
           borderRadius: '50%',
           pointerEvents: 'none',
