@@ -758,9 +758,13 @@ export default function CreateEditInvoice({
                   name={field.name}
                   ref={field.ref}
                 />
-                <label htmlFor="toggle-bank-details">
+                <label htmlFor="toggle-bank-details" className="block font-medium">
                   Include bank details in PDF
+                  <span className="block text-sm text-muted-foreground">
+                    Add your bank details in settings first.
+                  </span>
                 </label>
+
               </div>
             )}
           />

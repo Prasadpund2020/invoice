@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
 
     const userId = session.user.id;
 
-    console.log("####",signature.image)
+    console.log("####",signature?.image)
 
     // Update user personal info
     const userUpdatePayload: Partial<IUser> = {
